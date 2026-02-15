@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "605348896684",
+    "project_id": "texty-97cc8",
+    "storage_bucket": "texty-97cc8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:605348896684:android:94b6ce256ae18560f8e409",
+        "android_client_info": {
+          "package_name": "com.example.texty"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD05ikW2s3V1-vIDMNFgb_yMXw47eyKe1o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
