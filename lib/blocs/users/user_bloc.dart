@@ -8,9 +8,19 @@ class UsersBloc extends Bloc<UsersEvent, UsersState> {
 
   UsersBloc(this.userRepository) : super(UsersInitial()) {
     on<SearchUsers>((event, emit) async {
-      userRepository.searchUsers(event.query).listen((users) {
-        emit(UsersLoaded(users));
-      });
+      print("UsersBloc: Received SearchUsers event with query: ${event.query}");
+      emit(UsersLoading());
+      await emit.forEach(
+        userRepository.searchUsers(event.query),
+        onData: (users) {
+          print("UsersBloc: Emitting UsersLoaded with ${users.length} users");
+          return UsersLoaded(users);
+        },
+        onError: (error, stackTrace) {
+          print("UsersBloc: Error searching users: $error");
+          return UsersError(error.toString());
+        },
+      );
     });
   }
 }

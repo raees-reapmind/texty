@@ -11,8 +11,12 @@ class FirebaseAuthDatasource {
     final credentials = await _auth.createUserWithEmailAndPassword(
         email: email, password: password);
     print("DataSource: User created with UID: ${credentials.user!.uid}");
-    final user =
-        UserModel(uid: credentials.user!.uid, name: name, email: email);
+    final user = UserModel(
+      uid: credentials.user!.uid,
+      name: name,
+      email: email,
+      searchName: name.toLowerCase(),
+    );
     print("DataSource: Converting user to map and saving to Firestore...");
     try {
       await _firestore.collection('users').doc(user.uid).set(user.toMap());

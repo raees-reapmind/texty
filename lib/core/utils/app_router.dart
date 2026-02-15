@@ -1,14 +1,29 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:texty/views/screens/chat_screen.dart';
+import 'package:texty/views/screens/discover_screen.dart';
 import 'package:texty/views/screens/login_screen.dart';
+import 'package:texty/views/screens/recent_chat_screen.dart';
 import 'package:texty/views/screens/signup_screen.dart';
+import 'package:texty/views/screens/settings_screen.dart';
+import 'package:texty/views/screens/search_user_screen.dart';
+import 'package:texty/views/widgets/scaffold_with_nav_bar.dart';
+
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 class AppRouter {
   static final GoRouter router = GoRouter(
+      navigatorKey: _rootNavigatorKey,
       initialLocation: "/login",
+      refreshListenable:
+          GoRouterRefreshStream(FirebaseAuth.instance.authStateChanges()),
       redirect: (context, state) {
         final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+        debugPrint(
+            "Auth State Changed: isLoggedIn = $isLoggedIn, location = ${state.matchedLocation}");
         final isAuthRoute = state.matchedLocation == "/login" ||
             state.matchedLocation == "/signup";
 
@@ -17,7 +32,7 @@ class AppRouter {
         }
 
         if (isLoggedIn && isAuthRoute) {
-          return "/chat/global_chat";
+          return "/chat";
         }
 
         return null;
@@ -31,12 +46,57 @@ class AppRouter {
           path: '/signup',
           builder: (context, state) => SignupScreen(),
         ),
-        GoRoute(
-          path: '/chat/:chatId',
-          builder: (context, state) {
-            final chatId = state.pathParameters['chatId']!;
-            return ChatScreen(chatId: chatId);
+        ShellRoute(
+          navigatorKey: _shellNavigatorKey,
+          builder: (context, state, child) {
+            return ScaffoldWithNavBar(child: child);
           },
+          routes: [
+            GoRoute(
+              path: '/discover',
+              builder: (context, state) => const DiscoverScreen(),
+            ),
+            GoRoute(
+              path: '/chat',
+              builder: (context, state) => const RecentChatScreen(),
+              routes: [
+                GoRoute(
+                  path: 'search',
+                  parentNavigatorKey: _rootNavigatorKey,
+                  builder: (context, state) => const SearchUserScreen(),
+                ),
+                GoRoute(
+                  path: ':chatId',
+                  parentNavigatorKey: _rootNavigatorKey,
+                  builder: (context, state) {
+                    final chatId = state.pathParameters['chatId']!;
+                    return ChatScreen(chatId: chatId);
+                  },
+                ),
+              ],
+            ),
+            GoRoute(
+              path: '/settings',
+              builder: (context, state) => const SettingsScreen(),
+            ),
+          ],
         ),
       ]);
+}
+
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.listen(
+      (dynamic _) => notifyListeners(),
+    );
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
 }

@@ -8,3 +8,10 @@ class UsersLoaded extends UsersState {
   final List<UserModel> users;
   UsersLoaded(this.users);
 }
+
+class UsersLoading extends UsersState {}
+
+class UsersError extends UsersState {
+  final String message;
+  UsersError(this.message);
+}

@@ -21,4 +21,5 @@ class AppColors {
   // Input fields
   static const Color inputFill = Color(0xFFF0F2F5);
   static const Color inputBorder = Color(0xFFDFE6E9);
+  static const Color lightGrey = Color(0xFFE0E0E0);
 }
