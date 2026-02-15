@@ -25,11 +25,42 @@ class FirebaseAuthDatasource {
   }
 
   Future<UserModel> login(String email, String password) async {
-    final credential = await _auth.signInWithEmailAndPassword(
-        email: email, password: password);
-    final doc =
-        await _firestore.collection('users').doc(credential.user!.uid).get();
-    return UserModel.fromMap(doc.data()!);
+    try {
+      final credential = await _auth.signInWithEmailAndPassword(
+          email: email, password: password);
+
+      if (credential.user == null) {
+        throw 'Login failed: User not found.';
+      }
+
+      final doc =
+          await _firestore.collection('users').doc(credential.user!.uid).get();
+
+      if (!doc.exists) {
+        throw 'User data not found in database.';
+      }
+
+      final data = doc.data();
+      if (data == null) {
+        throw 'User data is corrupt.';
+      }
+
+      return UserModel.fromMap(data);
+    } on FirebaseAuthException catch (e) {
+      print("FirebaseAuthException: ${e.code}");
+      if (e.code == 'user-not-found') {
+        throw 'No user found for that email.';
+      } else if (e.code == 'wrong-password') {
+        throw 'Wrong password provided.';
+      } else if (e.code == 'invalid-credential') {
+        throw 'Invalid email or password.';
+      } else if (e.code == 'invalid-email') {
+        throw 'The email address is badly formatted.';
+      }
+      throw e.message ?? 'Authentication failed: ${e.code}';
+    } catch (e) {
+      throw e.toString();
+    }
   }
 
   Future<void> logout() async {

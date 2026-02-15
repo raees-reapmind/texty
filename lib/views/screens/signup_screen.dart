@@ -4,181 +4,193 @@ import 'package:go_router/go_router.dart';
 import 'package:texty/blocs/auth/auth_bloc.dart';
 import 'package:texty/blocs/auth/auth_event.dart';
 import 'package:texty/blocs/auth/auth_states.dart';
+import 'package:texty/core/theme/app_colors.dart';
+import 'package:texty/views/widgets/common_background.dart';
 
 class SignupScreen extends StatelessWidget {
-  final nameController = TextEditingController();
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
+  SignupScreen({Key? key}) : super(key: key);
+
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text("Create Account"),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.black,
-      ),
-      body: BlocConsumer<AuthBloc, AuthStates>(
+    return CommonBackground(
+      child: BlocConsumer<AuthBloc, AuthStates>(
         listener: (context, state) {
-          print("Signup Screen: Listener received state: $state");
           if (state is AuthAuthenticated) {
             context.go('/chat');
           } else if (state is AuthError) {
-            print("Signup Screen: Auth Error: ${state.message}");
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                  content: Text(state.message), backgroundColor: Colors.red),
+                content: Text(state.message),
+                backgroundColor: Colors.redAccent,
+                behavior: SnackBarBehavior.floating,
+              ),
             );
           }
         },
         builder: (context, state) {
-          print("Signup Screen: Rebuilding UI with state: $state");
           return Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    "Join Texty",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.deepPurple,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Connect with friends instantly.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  TextField(
-                    controller: nameController,
-                    decoration: InputDecoration(
-                      labelText: "Full Name",
-                      prefixIcon: const Icon(Icons.person_outline),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Header Area
+                    const Text(
+                      "Create Account",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
                       ),
-                      filled: true,
-                      fillColor: Colors.grey[50],
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: "Email Address",
-                      prefixIcon: const Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Sign up to get started with Texty.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
                       ),
-                      filled: true,
-                      fillColor: Colors.grey[50],
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: "Password",
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    const SizedBox(height: 48),
+
+                    // Name Field
+                    TextFormField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: "Full Name",
+                        prefixIcon: Icon(Icons.person_outline),
                       ),
-                      filled: true,
-                      fillColor: Colors.grey[50],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Name required";
+                        }
+                        return null;
+                      },
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                  SizedBox(
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: state is AuthLoading
-                          ? null
-                          : () {
-                              final name = nameController.text.trim();
-                              final email = emailController.text.trim();
-                              final password = passwordController.text.trim();
+                    const SizedBox(height: 20),
 
-                              print("Signup Screen: Sign Up Button Pressed");
-                              print(
-                                  "Signup Screen: Data - Name: '$name', Email: '$email'");
+                    // Email Field
+                    TextFormField(
+                      controller: emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: "Email Address",
+                        prefixIcon: Icon(Icons.email_outlined),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Email required";
+                        }
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                            .hasMatch(value)) {
+                          return 'Please enter a valid email';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
 
-                              if (name.isEmpty ||
-                                  email.isEmpty ||
-                                  password.isEmpty) {
-                                print(
-                                    "Signup Screen: Validation Failed - Empty fields");
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content:
-                                          Text("Please fill in all fields")),
-                                );
-                                return;
-                              }
+                    // Password Field
+                    TextFormField(
+                      controller: passwordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: "Password",
+                        prefixIcon: Icon(Icons.lock_outline),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Password required";
+                        }
+                        if (value.length < 6) {
+                          return "Minimum 6 characters";
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 32),
 
-                              print("Signup Screen: Dispatching SignUpEvent");
-                              context.read<AuthBloc>().add(
-                                    SignUpEvent(name, email, password),
-                                  );
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    // Sign Up Button
+                    SizedBox(
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: state is AuthLoading
+                            ? null
+                            : () {
+                                if (_formKey.currentState!.validate()) {
+                                  context.read<AuthBloc>().add(
+                                        SignUpEvent(
+                                          nameController.text.trim(),
+                                          emailController.text.trim(),
+                                          passwordController.text.trim(),
+                                        ),
+                                      );
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryPurple,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 8,
+                          shadowColor: AppColors.primaryPurple.withOpacity(0.4),
                         ),
-                        elevation: 2,
+                        child: state is AuthLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                "Sign Up",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
                       ),
-                      child: state is AuthLoading
-                          ? const SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text(
-                              "Sign Up",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text("Already have an account?",
-                          style: TextStyle(color: Colors.grey[600])),
-                      TextButton(
-                        onPressed: () {
-                          // Navigation to login screen would go here,
-                          // but sticking to current scope or maybe pop
-                          context.pop();
-                        },
-                        child: const Text("Log In",
-                            style: TextStyle(color: Colors.deepPurple)),
-                      ),
-                    ],
-                  ),
-                ],
+                    const SizedBox(height: 24),
+
+                    // Back to Login
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          "Already have an account? ",
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            "Log In",
+                            style: TextStyle(
+                              color: AppColors.primaryBlue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           );
