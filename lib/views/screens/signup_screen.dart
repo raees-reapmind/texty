@@ -1,20 +1,46 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:texty/blocs/auth/auth_bloc.dart';
 import 'package:texty/blocs/auth/auth_event.dart';
 import 'package:texty/blocs/auth/auth_states.dart';
 import 'package:texty/core/theme/app_colors.dart';
 import 'package:texty/views/widgets/common_background.dart';
 
-class SignupScreen extends StatelessWidget {
+class SignupScreen extends StatefulWidget {
   SignupScreen({Key? key}) : super(key: key);
 
+  @override
+  State<SignupScreen> createState() => _SignupScreenState();
+}
+
+class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController nameController = TextEditingController();
+
   final TextEditingController emailController = TextEditingController();
+
   final TextEditingController passwordController = TextEditingController();
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  File? selectedImage;
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 200, // Resize to small width
+      maxHeight: 200, // Resize to small height
+      imageQuality: 50, // High compression
+    );
+
+    if (image != null) {
+      setState(() => selectedImage = File(image.path));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +89,39 @@ class SignupScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 48),
+
+                    // --- Profile Image Picker UI ---
+                    GestureDetector(
+                      onTap: () => _pickImage(),
+                      child: Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: 50,
+                            backgroundColor: Colors.grey[200],
+                            backgroundImage: selectedImage != null
+                                ? FileImage(selectedImage!)
+                                : null,
+                            child: selectedImage == null
+                                ? const Icon(Icons.person,
+                                    size: 50, color: Colors.grey)
+                                : null,
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                  color: AppColors.primaryBlue,
+                                  shape: BoxShape.circle),
+                              child: const Icon(Icons.camera_alt,
+                                  color: Colors.white, size: 20),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
 
                     // Name Field
                     TextFormField(
@@ -134,6 +193,7 @@ class SignupScreen extends StatelessWidget {
                                           nameController.text.trim(),
                                           emailController.text.trim(),
                                           passwordController.text.trim(),
+                                          profilePicture: selectedImage,
                                         ),
                                       );
                                 }

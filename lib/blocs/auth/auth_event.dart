@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:equatable/equatable.dart';
 
 abstract class AuthEvent extends Equatable {
@@ -7,7 +9,8 @@ abstract class AuthEvent extends Equatable {
 
 class SignUpEvent extends AuthEvent {
   final String name, email, password;
-  SignUpEvent(this.name, this.email, this.password);
+  final File? profilePicture; // Add this field
+  SignUpEvent(this.name, this.email, this.password, {this.profilePicture});
 }
 
 class LoginEvent extends AuthEvent {

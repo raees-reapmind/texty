@@ -3,12 +3,14 @@ class UserModel {
   final String name;
   final String email;
   final String searchName;
+  final String? profilePictureUrl; // Add this field
 
   UserModel({
     required this.uid,
     required this.name,
     required this.email,
     required this.searchName,
+    this.profilePictureUrl, // Add it to constructor
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
@@ -17,6 +19,7 @@ class UserModel {
       name: map['name'] ?? '',
       email: map['email'] ?? '',
       searchName: map['searchName'] ?? '',
+      profilePictureUrl: map['profilePictureUrl'], // Add this line
     );
   }
 
@@ -26,6 +29,7 @@ class UserModel {
       'name': name,
       'email': email,
       'searchName': searchName,
+      'profilePictureUrl': profilePictureUrl, // Add this line
     };
   }
 }

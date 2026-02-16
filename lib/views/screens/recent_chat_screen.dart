@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +23,7 @@ class RecentChatScreen extends StatefulWidget {
 
 class _RecentChatScreenState extends State<RecentChatScreen> {
   final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-  
+
   @override
   void initState() {
     debugPrint("Initializing RecentChatScreen for user $uid");
@@ -68,6 +70,8 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
                                     snapshot.data?.data() != null) {
                                   final data = snapshot.data!.data()
                                       as Map<String, dynamic>;
+                                  debugPrint(
+                                      "User data fetched for RecentChatScreen: $data");
                                   userName = data['name'] ?? "User";
                                 }
 
@@ -128,15 +132,34 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
                         const SizedBox(height: 24),
 
                         // Stories List
-                        SizedBox(
-                          height: 90,
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            children: const [
-                              StoryAvatar(name: "Add Story", isAddStory: true),
-                            ],
-                          ),
-                        ),
+                        StreamBuilder<DocumentSnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(uid)
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              String profilePic = "";
+                              if (snapshot.hasData &&
+                                  snapshot.data?.data() != null) {
+                                final data = snapshot.data!.data()
+                                    as Map<String, dynamic>;
+                                debugPrint(
+                                    "User data fetched for RecentChatScreen: $data");
+                                profilePic = data['profilePictureUrl'] ?? "";
+                              }
+                              return SizedBox(
+                                height: 90,
+                                child: ListView(
+                                  scrollDirection: Axis.horizontal,
+                                  children: [
+                                    StoryAvatar(
+                                        name: "Add Story",
+                                        isAddStory: true,
+                                        profilePictureUrl: profilePic),
+                                  ],
+                                ),
+                              );
+                            }),
                       ],
                     ),
                   ),
@@ -183,100 +206,6 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
                         ],
                       ),
                     ),
-
-                    // Chat List
-                    // Expanded(
-                    // child:
-                    //  StreamBuilder(
-                    //   stream: FirebaseFirestore.instance
-                    //       .collection('chats')
-                    //       .where('participants', arrayContains: uid)
-                    //       .snapshots(),
-                    //   builder: (context, snapshot) {
-                    //     if (!snapshot.hasData) {
-                    //       return const Center(
-                    //           child: CircularProgressIndicator());
-                    //     }
-
-                    //     final docs = snapshot.data!.docs;
-                    //     debugPrint(
-                    //         "Fetched ${docs.length} chats for user $uid");
-
-                    //     if (docs.isEmpty) {
-                    //       return const Center(
-                    //           child: Text(
-                    //               "No chats yet. Start a conversation!"));
-                    //     }
-
-                    //     return ListView.builder(
-                    //   physics: const AlwaysScrollableScrollPhysics(),
-                    //   padding: const EdgeInsets.symmetric(horizontal: 24),
-                    //   itemCount: state.chats.length,
-                    //   itemBuilder: (context, index) {
-                    //     final chat = state.chats[index];
-                    //     final chatId = chat['chatId'] ?? '';
-
-                    //     // 1. Extract Chat Data (now available at top level thanks to our sendMessage fix)
-                    //     final String lastMessage = chat['lastMessage'] ?? 'No messages yet';
-                    //     final Timestamp? timestamp = chat['timestamp'] as Timestamp?;
-
-                    //     // 2. Identify the Other User
-                    //     final List<String> participants = List<String>.from(chat['participants'] ?? []);
-                    //     final String otherUserId = participants.firstWhere(
-                    //       (id) => id != uid,
-                    //       orElse: () => '',
-                    //     );
-
-                    //     // 3. Format the Time
-                    //     String displayTime = "";
-                    //     if (timestamp != null) {
-                    //       final date = timestamp.toDate();
-                    //       final now = DateTime.now();
-                    //       final diff = now.difference(date);
-
-                    //       if (diff.inDays == 0) {
-                    //         displayTime = "${date.hour}:${date.minute.toString().padLeft(2, '0')}";
-                    //       } else if (diff.inDays == 1) {
-                    //         displayTime = "Yesterday";
-                    //       } else {
-                    //         displayTime = "${date.day}/${date.month}";
-                    //       }
-                    //     }
-
-                    //     // 4. Return the UI Item
-                    //     // Note: We still use a StreamBuilder for the USER profile
-                    //     // because user names/avatars change independently of chat messages.
-                    //     return StreamBuilder<DocumentSnapshot>(
-                    //       stream: FirebaseFirestore.instance
-                    //           .collection('users')
-                    //           .doc(otherUserId)
-                    //           .snapshots(),
-                    //       builder: (context, userSnapshot) {
-                    //         String otherUserName = "User";
-                    //         String otherUserPhoto = "";
-
-                    //         if (userSnapshot.hasData && userSnapshot.data?.data() != null) {
-                    //           final userData = userSnapshot.data!.data() as Map<String, dynamic>;
-                    //           otherUserName = userData['name'] ?? "User";
-                    //           otherUserPhoto = userData['photoUrl'] ?? "";
-                    //         }
-
-                    //         return ChatListItem(
-                    //           name: otherUserName,
-                    //           message: lastMessage,
-                    //           time: displayTime,
-                    //           avatarUrl: otherUserPhoto,
-                    //           unreadCount: 0, // You can add logic for this later
-                    //           onTap: () {
-                    //             // Navigate using the chatId
-                    //             context.go('/chat/$chatId');
-                    //           },
-                    //         );
-
-                    //   },
-                    // ),
-                    // }
-                    // ),
 
                     Expanded(
                       child: BlocBuilder<RecentChatsBloc, RecentChatsState>(
@@ -347,5 +276,21 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
       unreadCount: 0,
       onTap: () => context.go('/chat/$chatId'),
     );
+  }
+
+  Widget _buildAvatar(String? base64String) {
+    if (base64String == null || base64String.isEmpty) {
+      return const CircleAvatar(child: Icon(Icons.person));
+    }
+
+    try {
+      return CircleAvatar(
+        backgroundImage: MemoryImage(
+          base64Decode(base64String),
+        ),
+      );
+    } catch (e) {
+      return const CircleAvatar(child: Icon(Icons.error));
+    }
   }
 }

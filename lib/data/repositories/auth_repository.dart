@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:texty/data/datasources/firebase_auth_datasource.dart';
 import 'package:texty/models/user_model.dart';
 
@@ -6,8 +8,10 @@ class AuthRepository {
 
   AuthRepository(this.datasource);
 
-  Future<UserModel> signUp(String name, String email, String password){
-    return datasource.signUp(name, email, password);
+  Future<UserModel> signUp(String name, String email, String password,
+      {File? profilePicture}) {
+    return datasource.signUp(name, email, password,
+        profilePicture: profilePicture);
   }
 
   Future<UserModel> login(String email, String password) {

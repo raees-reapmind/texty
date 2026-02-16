@@ -14,7 +14,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthStates> {
         print(
             "AuthBloc: Calling repository.signUp with name: ${event.name}, email: ${event.email}");
         final user =
-            await repository.signUp(event.name, event.email, event.password);
+            await repository.signUp(event.name, event.email, event.password, profilePicture: event.profilePicture);
         print("AuthBloc: SignUp successful, user: ${user.uid}");
         emit(AuthAuthenticated(user));
         print("AuthBloc: Emitted AuthAuthenticated");

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,16 +11,28 @@ class FirebaseAuthDatasource {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  Future<UserModel> signUp(String name, String email, String password) async {
+  Future<UserModel> signUp(String name, String email, String password,
+      {File? profilePicture}) async {
     print("DataSource: Starting signUp for $email");
     final credentials = await _auth.createUserWithEmailAndPassword(
         email: email, password: password);
+    String? base64Image;
+    if (profilePicture != null) {
+      // Read bytes from file
+      List<int> imageBytes = await profilePicture.readAsBytes();
+      // Convert to Base64 string
+      base64Image = base64Encode(imageBytes);
+    }
     print("DataSource: User created with UID: ${credentials.user!.uid}");
     final user = UserModel(
       uid: credentials.user!.uid,
       name: name,
       email: email,
       searchName: name.toLowerCase(),
+      // profilePictureUrl: profilePicture != null
+      //     ? await uploadProfilePicture(credentials.user!.uid, profilePicture)
+      //     : null,
+      profilePictureUrl: base64Image, // Store Base64 string in Firestore
     );
     print("DataSource: Converting user to map and saving to Firestore...");
     try {

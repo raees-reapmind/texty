@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:texty/core/theme/app_colors.dart';
 
@@ -5,12 +7,14 @@ class StoryAvatar extends StatelessWidget {
   final String name;
   final String image; // URL or asset path
   final bool isAddStory;
+  final String? profilePictureUrl; // Add this field
 
   const StoryAvatar({
     Key? key,
     required this.name,
     this.image = '',
     this.isAddStory = false,
+    this.profilePictureUrl, // Add it to constructor
   }) : super(key: key);
 
   @override
@@ -44,9 +48,13 @@ class StoryAvatar extends StatelessWidget {
                     backgroundColor: isAddStory
                         ? AppColors.primaryBlue.withOpacity(0.1)
                         : Colors.grey[200],
-                    backgroundImage: !isAddStory && image.isNotEmpty
-                        ? NetworkImage(image)
-                        : null,
+                    // backgroundImage: !isAddStory && image.isNotEmpty
+                    //     ? NetworkImage(image)
+                    //     : null,
+                    backgroundImage:
+                        (base64Decode(profilePictureUrl ?? '')).isNotEmpty
+                            ? MemoryImage(base64Decode(profilePictureUrl!))
+                            : null, 
                     child: isAddStory
                         ? const Icon(Icons.add, color: AppColors.primaryBlue)
                         : (image.isEmpty
