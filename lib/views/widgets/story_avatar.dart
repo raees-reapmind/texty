@@ -56,13 +56,19 @@ class StoryAvatar extends StatelessWidget {
                     // backgroundImage: !isAddStory && image.isNotEmpty
                     //     ? NetworkImage(image)
                     //     : null,
-                    backgroundImage:
-                        (base64Decode(profilePictureUrl ?? '')).isNotEmpty
-                            ? MemoryImage(base64Decode(profilePictureUrl!))
-                            : null,
+                    backgroundImage: profilePictureUrl != null &&
+                            profilePictureUrl!.isNotEmpty
+                        ? MemoryImage(base64Decode(profilePictureUrl!))
+                        : null,
                     child: isAddStory
-                        ? const Icon(Icons.add, color: AppColors.primaryBlue)
-                        : (image.isEmpty
+                        ? (profilePictureUrl == null ||
+                                profilePictureUrl!.isEmpty
+                            ? const Icon(Icons.add,
+                                color: AppColors.primaryBlue)
+                            : null)
+                        : (image.isEmpty &&
+                                (profilePictureUrl == null ||
+                                    profilePictureUrl!.isEmpty)
                             ? Text(
                                 name.isNotEmpty ? name[0].toUpperCase() : '?',
                                 style: const TextStyle(
@@ -73,19 +79,6 @@ class StoryAvatar extends StatelessWidget {
                   ),
                 ),
               ),
-              if (isAddStory)
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: AppColors.primaryBlue,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.add, size: 12, color: Colors.white),
-                  ),
-                ),
             ],
           ),
           const SizedBox(height: 8),

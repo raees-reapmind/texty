@@ -18,6 +18,12 @@ class SearchUserScreen extends StatefulWidget {
 class _SearchUserScreenState extends State<SearchUserScreen> {
   final TextEditingController _searchController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    context.read<UsersBloc>().add(ClearSearch());
+  }
+
   String generateChatId(String uid1, String uid2) {
     final sorted = [uid1, uid2]..sort();
     return "${sorted[0]}_${sorted[1]}";

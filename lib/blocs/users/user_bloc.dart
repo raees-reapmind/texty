@@ -22,5 +22,11 @@ class UsersBloc extends Bloc<UsersEvent, UsersState> {
         },
       );
     });
+
+    on<ClearSearch>((event, emit) {
+      print(
+          "UsersBloc: Received ClearSearch event. Resetting to UsersInitial.");
+      emit(UsersInitial());
+    });
   }
 }
