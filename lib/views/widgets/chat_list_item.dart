@@ -25,6 +25,7 @@ class ChatListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
         child: Row(
@@ -62,6 +63,8 @@ class ChatListItem extends StatelessWidget {
                 children: [
                   Text(
                     name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -85,6 +88,8 @@ class ChatListItem extends StatelessWidget {
                 ],
               ),
             ),
+
+            const SizedBox(width: 5),
 
             // Meta Info
             Column(

@@ -28,6 +28,29 @@ class AuthBloc extends Bloc<AuthEvent, AuthStates> {
     add(CheckAuthStatusEvent());
 
     on<SignUpEvent>((event, emit) async {
+      // Fail-safe validation
+      final emailRegex = RegExp(
+          r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$");
+      if (!emailRegex.hasMatch(event.email)) {
+        emit(AuthError("Invalid email format"));
+        return;
+      }
+
+      if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(event.name.trim())) {
+        emit(AuthError("Name can only contain alphabets and spaces"));
+        return;
+      }
+
+      if (event.password.length < 6 ||
+          !RegExp(r'[A-Z]').hasMatch(event.password) ||
+          !RegExp(r'[a-z]').hasMatch(event.password) ||
+          !RegExp(r'[0-9]').hasMatch(event.password) ||
+          !RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(event.password)) {
+        emit(AuthError(
+            "Password does not meet complexity requirements (6+ chars, uppercase, lowercase, number, special char)"));
+        return;
+      }
+
       emit(AuthLoading());
       print("AuthBloc: Emitted AuthLoading");
       try {

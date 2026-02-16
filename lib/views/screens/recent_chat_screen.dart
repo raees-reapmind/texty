@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:texty/blocs/auth/auth_bloc.dart';
 import 'package:texty/blocs/auth/auth_states.dart';
 import 'package:texty/blocs/recent_chats/recent_chats_bloc.dart';
@@ -70,38 +71,44 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
                                   print(
                                       "RecentChatScreen: Authenticated user name: $name");
                                 }
-                                return Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 22,
-                                      backgroundColor: Colors.grey[200],
-                                      backgroundImage:
-                                          state is AuthAuthenticated &&
-                                                  state.userModel
-                                                          .profilePictureUrl !=
-                                                      null
-                                              ? MemoryImage(base64Decode(state
-                                                  .userModel
-                                                  .profilePictureUrl!))
-                                              : null,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text("Good morning",
-                                            style: TextStyle(
-                                                color:
-                                                    AppColors.textSecondary)),
-                                        Text(name,
-                                            style: const TextStyle(
-                                                color: AppColors.textPrimary,
-                                                fontSize: 24,
-                                                fontWeight: FontWeight.bold)),
-                                      ],
-                                    ),
-                                  ],
+                                return Expanded(
+                                  child: Row(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 22,
+                                        backgroundColor: Colors.grey[200],
+                                        backgroundImage: state
+                                                    is AuthAuthenticated &&
+                                                state.userModel
+                                                        .profilePictureUrl !=
+                                                    null
+                                            ? MemoryImage(base64Decode(state
+                                                .userModel.profilePictureUrl!))
+                                            : null,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text("Good morning",
+                                                style: TextStyle(
+                                                    color: AppColors
+                                                        .textSecondary)),
+                                            Text(name,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                    color:
+                                                        AppColors.textPrimary,
+                                                    fontSize: 24,
+                                                    fontWeight:
+                                                        FontWeight.bold)),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 );
                               },
                             ),
@@ -166,11 +173,15 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
                                   // CHATTED USERS (Subsequent Items)
                                   if (recentState is RecentChatsLoaded)
                                     ...recentState.chats.map((chat) {
-                                      return StoryAvatar(
-                                        name: chat['otherUserName'] ?? 'User',
-                                        profilePictureUrl:
-                                            chat['otherUserPhoto'],
-                                        isAddStory: false,
+                                      return Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 8.0),
+                                        child: StoryAvatar(
+                                          name: chat['otherUserName'] ?? 'User',
+                                          profilePictureUrl:
+                                              chat['otherUserPhoto'],
+                                          isAddStory: false,
+                                        ),
                                       );
                                     }).toList(),
                                 ],
@@ -286,7 +297,7 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
     String displayTime = "";
     if (chat['timestamp'] != null) {
       final date = (chat['timestamp'] as Timestamp).toDate();
-      displayTime = "${date.hour}:${date.minute.toString().padLeft(2, '0')}";
+      displayTime = DateFormat('hh:mm a').format(date);
     }
 
     return ChatListItem(

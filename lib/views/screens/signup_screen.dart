@@ -139,6 +139,9 @@ class _SignupScreenState extends State<SignupScreen> {
                         if (value == null || value.isEmpty) {
                           return "Name required";
                         }
+                        if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) {
+                          return "Only alphabets and spaces are allowed";
+                        }
                         return null;
                       },
                     ),
@@ -156,9 +159,11 @@ class _SignupScreenState extends State<SignupScreen> {
                         if (value == null || value.isEmpty) {
                           return "Email required";
                         }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                            .hasMatch(value)) {
-                          return 'Please enter a valid email';
+                        // Stricter email regex with end anchor
+                        final emailRegex = RegExp(
+                            r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$");
+                        if (!emailRegex.hasMatch(value)) {
+                          return 'Please enter a valid email address';
                         }
                         return null;
                       },
@@ -178,7 +183,20 @@ class _SignupScreenState extends State<SignupScreen> {
                           return "Password required";
                         }
                         if (value.length < 6) {
-                          return "Minimum 6 characters";
+                          return "Password must be at least 6 characters";
+                        }
+                        if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                          return "Must contain at least one uppercase letter";
+                        }
+                        if (!RegExp(r'[a-z]').hasMatch(value)) {
+                          return "Must contain at least one lowercase letter";
+                        }
+                        if (!RegExp(r'[0-9]').hasMatch(value)) {
+                          return "Must contain at least one number";
+                        }
+                        if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]')
+                            .hasMatch(value)) {
+                          return "Must contain at least one special character";
                         }
                         return null;
                       },

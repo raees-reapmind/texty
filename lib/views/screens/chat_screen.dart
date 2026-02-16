@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -129,13 +130,27 @@ class _ChatScreenState extends State<ChatScreen> {
                 CircleAvatar(
                   radius: 20,
                   backgroundColor: AppColors.primaryBlue.withOpacity(0.2),
-                  child: Text(
-                    userName.isNotEmpty ? userName[0].toUpperCase() : '?',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryBlue,
-                    ),
-                  ),
+                  backgroundImage: snapshot.hasData &&
+                          snapshot.data?.data() != null &&
+                          (snapshot.data!.data() as Map<String, dynamic>)[
+                                  'profilePictureUrl'] !=
+                              null
+                      ? MemoryImage(base64Decode((snapshot.data!.data()
+                          as Map<String, dynamic>)['profilePictureUrl']))
+                      : null,
+                  child: snapshot.hasData &&
+                          snapshot.data?.data() != null &&
+                          (snapshot.data!.data() as Map<String, dynamic>)[
+                                  'profilePictureUrl'] ==
+                              null
+                      ? Text(
+                          userName.isNotEmpty ? userName[0].toUpperCase() : '?',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primaryBlue,
+                          ),
+                        )
+                      : null,
                 ),
               ],
             ),
@@ -261,7 +276,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            DateFormat('HH:mm').format(message.timestamp),
+                            DateFormat('hh:mm a').format(message.timestamp),
                             style: TextStyle(
                               color: isMe
                                   ? Colors.white.withOpacity(0.7)
@@ -274,7 +289,9 @@ class _ChatScreenState extends State<ChatScreen> {
                             Icon(
                               Icons.done_all,
                               size: 14,
-                              color: Colors.white.withOpacity(0.7),
+                              color: message.isSeen
+                                  ? Colors.greenAccent
+                                  : Colors.white.withOpacity(0.7),
                             ),
                           ],
                         ],
@@ -306,14 +323,28 @@ class _ChatScreenState extends State<ChatScreen> {
         return CircleAvatar(
           radius: 18,
           backgroundColor: AppColors.primaryBlue.withOpacity(0.2),
-          child: Text(
-            userName.isNotEmpty ? userName[0].toUpperCase() : '?',
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primaryBlue,
-            ),
-          ),
+          backgroundImage: snapshot.hasData &&
+                  snapshot.data?.data() != null &&
+                  (snapshot.data!.data()
+                          as Map<String, dynamic>)['profilePictureUrl'] !=
+                      null
+              ? MemoryImage(base64Decode((snapshot.data!.data()
+                  as Map<String, dynamic>)['profilePictureUrl']))
+              : null,
+          child: snapshot.hasData &&
+                  snapshot.data?.data() != null &&
+                  (snapshot.data!.data()
+                          as Map<String, dynamic>)['profilePictureUrl'] ==
+                      null
+              ? Text(
+                  userName.isNotEmpty ? userName[0].toUpperCase() : '?',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryBlue,
+                  ),
+                )
+              : null,
         );
       },
     );

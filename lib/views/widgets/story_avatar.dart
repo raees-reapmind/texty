@@ -20,6 +20,7 @@ class StoryAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: 92,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.cardWhite,
