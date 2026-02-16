@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:texty/models/message_model.dart';
 
@@ -78,5 +79,30 @@ class FirebaseChatDatasource {
         .get();
 
     return snapshot.docs.length;
+  }
+
+  Future<void> deleteChat(String chatId) async {
+    debugPrint(
+        "FirebaseChatDatasource: Deleting chat doc and messages for chatId: $chatId");
+    try {
+      final chatDocRef = _firestore.collection('chats').doc(chatId);
+
+      // Delete messages subcollection (Firestore doesn't auto-delete subcollections)
+      final messages = await chatDocRef.collection('messages').get();
+      debugPrint(
+          "FirebaseChatDatasource: Found ${messages.docs.length} messages to delete");
+
+      final batch = _firestore.batch();
+      for (var doc in messages.docs) {
+        batch.delete(doc.reference);
+      }
+      batch.delete(chatDocRef);
+      await batch.commit();
+      debugPrint(
+          "FirebaseChatDatasource: Successfully committed deletion batch");
+    } catch (e) {
+      debugPrint("FirebaseChatDatasource: Error in deleteChat: $e");
+      rethrow;
+    }
   }
 }

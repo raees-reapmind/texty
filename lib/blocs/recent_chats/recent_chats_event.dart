@@ -10,7 +10,6 @@ class LoadRecentChats extends RecentChatsEvent {
   LoadRecentChats(this.uid);
 }
 
-
 class UpdateRecentChats extends RecentChatsEvent {
   final List<Map<String, dynamic>> chats;
   final String currentUid; // Add this field
@@ -19,6 +18,14 @@ class UpdateRecentChats extends RecentChatsEvent {
 
   @override
   List<Object?> get props => [chats, currentUid];
+}
+
+class DeleteChat extends RecentChatsEvent {
+  final String chatId;
+  DeleteChat(this.chatId);
+
+  @override
+  List<Object?> get props => [chatId];
 }
 
 class RecentChatsErrorEvent extends RecentChatsEvent {

@@ -29,4 +29,8 @@ class ChatRepository {
   Future<int> getUnreadCount(String chatId, String userId) {
     return dataSource.getUnreadCount(chatId, userId);
   }
+
+  Future<void> deleteChat(String chatId) {
+    return dataSource.deleteChat(chatId);
+  }
 }

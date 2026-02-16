@@ -62,6 +62,20 @@ class RecentChatsBloc extends Bloc<RecentChatsEvent, RecentChatsState> {
       }
     });
 
+    on<DeleteChat>((event, emit) async {
+      debugPrint(
+          "RecentChatsBloc: Handling DeleteChat for chatId: ${event.chatId}");
+      try {
+        await chatRepository.deleteChat(event.chatId);
+        debugPrint(
+            "RecentChatsBloc: DeleteChat successful for chatId: ${event.chatId}");
+        // The stream will naturally update and remove the chat from the list
+      } catch (e) {
+        debugPrint("RecentChatsBloc: Error deleting chat: $e");
+        emit(RecentChatsError(e.toString()));
+      }
+    });
+
     on<RecentChatsErrorEvent>((event, emit) {
       emit(RecentChatsError(event.message));
     });

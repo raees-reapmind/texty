@@ -14,7 +14,7 @@ import 'package:texty/blocs/recent_chats/recent_chats_states.dart';
 import 'package:texty/core/theme/app_colors.dart';
 import 'package:texty/views/widgets/chat_list_item.dart';
 import 'package:texty/views/widgets/common_background.dart';
-
+import 'package:texty/views/widgets/slidable_wrapper.dart';
 import 'package:texty/views/widgets/story_avatar.dart';
 
 class RecentChatScreen extends StatefulWidget {
@@ -266,7 +266,49 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
                                 final chat = state.chats[index];
                                 debugPrint(
                                     "Building chat item for chat: $chat");
-                                return _buildChatItem(chat);
+                                return SlidableWrapper(
+                                  key: Key(chat['chatId']),
+                                  actionWidth: 90,
+                                  background: Container(
+                                    alignment: Alignment.center,
+                                    padding: const EdgeInsets.only(right: 10),
+                                    margin: const EdgeInsets.only(bottom: 20),
+                                    child: Container(
+                                      width: 50,
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        color: const Color(
+                                            0xFFFF5252), // Modern vibrant red
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.red.withOpacity(0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          customBorder: const CircleBorder(),
+                                          onTap: () {
+                                            debugPrint(
+                                                "RecentChatScreen: Delete tapped for chatId: ${chat['chatId']}");
+                                            context.read<RecentChatsBloc>().add(
+                                                DeleteChat(chat['chatId']));
+                                          },
+                                          child: const Icon(
+                                            Icons.delete_outline_rounded,
+                                            color: Colors.white,
+                                            size: 26,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  child: _buildChatItem(chat),
+                                );
                               },
                             );
                           }
