@@ -91,35 +91,40 @@ class _SignupScreenState extends State<SignupScreen> {
                     const SizedBox(height: 48),
 
                     // --- Profile Image Picker UI ---
-                    GestureDetector(
-                      onTap: () => _pickImage(),
-                      child: Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: 50,
-                            backgroundColor: Colors.grey[200],
-                            backgroundImage: selectedImage != null
-                                ? FileImage(selectedImage!)
-                                : null,
-                            child: selectedImage == null
-                                ? const Icon(Icons.person,
-                                    size: 50, color: Colors.grey)
-                                : null,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        GestureDetector(
+                          onTap: () => _pickImage(),
+                          child: Stack(
+                            children: [
+                              CircleAvatar(
+                                radius: 60,
+                                backgroundColor: Colors.grey[200],
+                                backgroundImage: selectedImage != null
+                                    ? FileImage(selectedImage!)
+                                    : null,
+                                child: selectedImage == null
+                                    ? const Icon(Icons.person,
+                                        size: 50, color: Colors.grey)
+                                    : null,
+                              ),
+                              Positioned(
+                                bottom: 5,
+                                right: 5,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                      color: AppColors.primaryBlue,
+                                      shape: BoxShape.circle),
+                                  child: const Icon(Icons.camera_alt,
+                                      color: Colors.white, size: 20),
+                                ),
+                              ),
+                            ],
                           ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                  color: AppColors.primaryBlue,
-                                  shape: BoxShape.circle),
-                              child: const Icon(Icons.camera_alt,
-                                  color: Colors.white, size: 20),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 32),
 

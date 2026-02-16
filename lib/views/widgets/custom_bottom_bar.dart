@@ -29,7 +29,7 @@ class CustomBottomBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _buildItem(Icons.explore, "Discover", 0),
-          _buildItem(Icons.chat_bubble, "Chat", 1),
+          _buildItem(Icons.chat, "Chat", 1),
           _buildItem(Icons.settings, "Settings", 2),
         ],
       ),

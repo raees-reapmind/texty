@@ -7,14 +7,35 @@ class AuthBloc extends Bloc<AuthEvent, AuthStates> {
   final AuthRepository repository;
 
   AuthBloc(this.repository) : super(AuthInitial()) {
+    on<CheckAuthStatusEvent>((event, emit) async {
+      print("AuthBloc: Checking auth status...");
+      try {
+        final user = await repository.getCurrentUser();
+        if (user != null) {
+          print("AuthBloc: Found existing session for user: ${user.uid}");
+          emit(AuthAuthenticated(user));
+        } else {
+          print("AuthBloc: No existing session found");
+          emit(AuthUnauthenticated());
+        }
+      } catch (e) {
+        print("AuthBloc: Error checking auth status: $e");
+        emit(AuthUnauthenticated());
+      }
+    });
+
+    // Check for existing session on startup
+    add(CheckAuthStatusEvent());
+
     on<SignUpEvent>((event, emit) async {
       emit(AuthLoading());
       print("AuthBloc: Emitted AuthLoading");
       try {
         print(
             "AuthBloc: Calling repository.signUp with name: ${event.name}, email: ${event.email}");
-        final user =
-            await repository.signUp(event.name, event.email, event.password, profilePicture: event.profilePicture);
+        final user = await repository.signUp(
+            event.name, event.email, event.password,
+            profilePicture: event.profilePicture);
         print("AuthBloc: SignUp successful, user: ${user.uid}");
         emit(AuthAuthenticated(user));
         print("AuthBloc: Emitted AuthAuthenticated");

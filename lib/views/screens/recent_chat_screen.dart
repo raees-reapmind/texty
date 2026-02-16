@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:texty/blocs/auth/auth_bloc.dart';
+import 'package:texty/blocs/auth/auth_states.dart';
 import 'package:texty/blocs/recent_chats/recent_chats_bloc.dart';
 import 'package:texty/blocs/recent_chats/recent_chats_event.dart';
 import 'package:texty/blocs/recent_chats/recent_chats_states.dart';
@@ -59,39 +61,45 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            StreamBuilder<DocumentSnapshot>(
-                              stream: FirebaseFirestore.instance
-                                  .collection('users')
-                                  .doc(uid)
-                                  .snapshots(),
-                              builder: (context, snapshot) {
-                                String userName = "User";
-                                if (snapshot.hasData &&
-                                    snapshot.data?.data() != null) {
-                                  final data = snapshot.data!.data()
-                                      as Map<String, dynamic>;
-                                  debugPrint(
-                                      "User data fetched for RecentChatScreen: $data");
-                                  userName = data['name'] ?? "User";
+                            BlocBuilder<AuthBloc, AuthStates>(
+                              builder: (context, state) {
+                                String name = "User";
+                                if (state is AuthAuthenticated) {
+                                  // Again, use userModel here
+                                  name = state.userModel.name;
+                                  print(
+                                      "RecentChatScreen: Authenticated user name: $name");
                                 }
-
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                return Row(
                                   children: [
-                                    const Text(
-                                      "Good morning",
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: AppColors.textSecondary,
-                                      ),
+                                    CircleAvatar(
+                                      radius: 22,
+                                      backgroundColor: Colors.grey[200],
+                                      backgroundImage:
+                                          state is AuthAuthenticated &&
+                                                  state.userModel
+                                                          .profilePictureUrl !=
+                                                      null
+                                              ? MemoryImage(base64Decode(state
+                                                  .userModel
+                                                  .profilePictureUrl!))
+                                              : null,
                                     ),
-                                    Text(
-                                      userName,
-                                      style: const TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.textPrimary,
-                                      ),
+                                    const SizedBox(width: 12),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text("Good morning",
+                                            style: TextStyle(
+                                                color:
+                                                    AppColors.textSecondary)),
+                                        Text(name,
+                                            style: const TextStyle(
+                                                color: AppColors.textPrimary,
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.bold)),
+                                      ],
                                     ),
                                   ],
                                 );
@@ -101,10 +109,8 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
                               children: [
                                 Container(
                                   decoration: BoxDecoration(
-                                    color: const Color(
-                                        0xFFFFD1DC), // Light pinkish
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
+                                      color: AppColors.pinkFFFF6B6B,
+                                      shape: BoxShape.circle),
                                   child: IconButton(
                                     icon: const Icon(Icons.search,
                                         color:
@@ -115,8 +121,8 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
                                 const SizedBox(width: 8),
                                 Container(
                                   decoration: BoxDecoration(
-                                    color: AppColors.primaryBlue, // Blue
-                                    borderRadius: BorderRadius.circular(12),
+                                    color: AppColors.primaryBlue,
+                                    shape: BoxShape.circle,
                                   ),
                                   child: IconButton(
                                     icon: const Icon(Icons.add,
@@ -130,36 +136,48 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
                         ),
 
                         const SizedBox(height: 24),
+                        SizedBox(
+                          height: 120, // Explicit height for horizontal list
+                          child: BlocBuilder<RecentChatsBloc, RecentChatsState>(
+                            builder: (context, recentState) {
+                              return ListView(
+                                scrollDirection: Axis.horizontal,
+                                children: [
+                                  // YOUR AVATAR (First Item)
+                                  BlocBuilder<AuthBloc, AuthStates>(
+                                    builder: (context, authState) {
+                                      String? myImage;
+                                      if (authState is AuthAuthenticated) {
+                                        myImage = authState
+                                            .userModel.profilePictureUrl;
+                                      }
+                                      return Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 8.0),
+                                        child: StoryAvatar(
+                                          name: "Add Story",
+                                          isAddStory: true,
+                                          profilePictureUrl: myImage,
+                                        ),
+                                      );
+                                    },
+                                  ),
 
-                        // Stories List
-                        StreamBuilder<DocumentSnapshot>(
-                            stream: FirebaseFirestore.instance
-                                .collection('users')
-                                .doc(uid)
-                                .snapshots(),
-                            builder: (context, snapshot) {
-                              String profilePic = "";
-                              if (snapshot.hasData &&
-                                  snapshot.data?.data() != null) {
-                                final data = snapshot.data!.data()
-                                    as Map<String, dynamic>;
-                                debugPrint(
-                                    "User data fetched for RecentChatScreen: $data");
-                                profilePic = data['profilePictureUrl'] ?? "";
-                              }
-                              return SizedBox(
-                                height: 90,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    StoryAvatar(
-                                        name: "Add Story",
-                                        isAddStory: true,
-                                        profilePictureUrl: profilePic),
-                                  ],
-                                ),
+                                  // CHATTED USERS (Subsequent Items)
+                                  if (recentState is RecentChatsLoaded)
+                                    ...recentState.chats.map((chat) {
+                                      return StoryAvatar(
+                                        name: chat['otherUserName'] ?? 'User',
+                                        profilePictureUrl:
+                                            chat['otherUserPhoto'],
+                                        isAddStory: false,
+                                      );
+                                    }).toList(),
+                                ],
                               );
-                            }),
+                            },
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -235,6 +253,8 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
                               itemCount: state.chats.length,
                               itemBuilder: (context, index) {
                                 final chat = state.chats[index];
+                                debugPrint(
+                                    "Building chat item for chat: $chat");
                                 return _buildChatItem(chat);
                               },
                             );
@@ -276,21 +296,5 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
       unreadCount: 0,
       onTap: () => context.go('/chat/$chatId'),
     );
-  }
-
-  Widget _buildAvatar(String? base64String) {
-    if (base64String == null || base64String.isEmpty) {
-      return const CircleAvatar(child: Icon(Icons.person));
-    }
-
-    try {
-      return CircleAvatar(
-        backgroundImage: MemoryImage(
-          base64Decode(base64String),
-        ),
-      );
-    } catch (e) {
-      return const CircleAvatar(child: Icon(Icons.error));
-    }
   }
 }

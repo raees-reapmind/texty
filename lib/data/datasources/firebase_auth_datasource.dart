@@ -88,6 +88,21 @@ class FirebaseAuthDatasource {
     await _auth.signOut();
   }
 
+  Future<UserModel?> getCurrentUser() async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      return null;
+    }
+
+    final doc = await _firestore.collection('users').doc(currentUser.uid).get();
+
+    if (!doc.exists || doc.data() == null) {
+      return null;
+    }
+
+    return UserModel.fromMap(doc.data()!);
+  }
+
   Future<String> uploadProfilePicture(String uid, File imageFile) async {
     final ref = _storage.ref().child('user_profiles').child('$uid.jpg');
     await ref.putFile(imageFile);

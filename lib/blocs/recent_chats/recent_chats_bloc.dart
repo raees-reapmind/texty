@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -43,11 +44,12 @@ class RecentChatsBloc extends Bloc<RecentChatsEvent, RecentChatsState> {
 
           if (otherUserId.isNotEmpty) {
             final userData = await chatRepository.getUserProfile(otherUserId);
+            log("RecentChatsBloc: Fetched user profile for $otherUserId: $userData");
 
             enrichedChats.add({
               ...chat,
               'otherUserName': userData?['name'] ?? 'User',
-              'otherUserPhoto': userData?['photoUrl'] ?? '',
+              'otherUserPhoto': userData?['profilePictureUrl'] ?? '',
             });
           }
         }

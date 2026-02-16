@@ -19,8 +19,12 @@ class StoryAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.cardWhite,
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Column(
         children: [
           Stack(
@@ -54,7 +58,7 @@ class StoryAvatar extends StatelessWidget {
                     backgroundImage:
                         (base64Decode(profilePictureUrl ?? '')).isNotEmpty
                             ? MemoryImage(base64Decode(profilePictureUrl!))
-                            : null, 
+                            : null,
                     child: isAddStory
                         ? const Icon(Icons.add, color: AppColors.primaryBlue)
                         : (image.isEmpty

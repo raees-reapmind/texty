@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:texty/core/theme/app_colors.dart';
 
@@ -38,7 +40,7 @@ class ChatListItem extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(25),
                 child: avatarUrl.isNotEmpty
-                    ? Image.network(avatarUrl, fit: BoxFit.cover)
+                    ? _buildAvatarImage(avatarUrl)
                     : Center(
                         child: Text(
                           name.isNotEmpty ? name[0].toUpperCase() : '?',
@@ -115,6 +117,31 @@ class ChatListItem extends StatelessWidget {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarImage(String base64String) {
+    try {
+      return Image.memory(
+        base64Decode(base64String),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
+      );
+    } catch (e) {
+      return _buildPlaceholder();
+    }
+  }
+
+  Widget _buildPlaceholder() {
+    return Center(
+      child: Text(
+        name.isNotEmpty ? name[0].toUpperCase() : '?',
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          color: AppColors.textSecondary,
+          fontSize: 18,
         ),
       ),
     );

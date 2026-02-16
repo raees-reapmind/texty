@@ -22,5 +22,9 @@ class AuthRepository {
     return datasource.logout();
   }
 
+  Future<UserModel?> getCurrentUser() {
+    return datasource.getCurrentUser();
+  }
+
   Stream get authStateChanges => datasource.authStateChanges;
 }

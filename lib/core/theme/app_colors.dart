@@ -7,6 +7,7 @@ class AppColors {
 
   // Accent colors
   static const Color accentPink = Color(0xFFFF6B6B);
+  static const Color pinkFFFF6B6B = Color(0xFFFFD1DC);
   static const Color accentYellow = Color(0xFFFFD93D);
 
   // Background colors
