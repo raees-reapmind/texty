@@ -53,4 +53,30 @@ class FirebaseChatDatasource {
     final doc = await _firestore.collection('users').doc(uid).get();
     return doc.data();
   }
+
+  Future<void> markMessagesAsRead(String chatId, String userId) async {
+    final messages = await _firestore
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .where('receiverId', isEqualTo: userId)
+        .where('isSeen', isEqualTo: false)
+        .get();
+
+    for (var doc in messages.docs) {
+      await doc.reference.update({'isSeen': true});
+    }
+  }
+
+  Future<int> getUnreadCount(String chatId, String userId) async {
+    final snapshot = await _firestore
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .where('receiverId', isEqualTo: userId)
+        .where('isSeen', isEqualTo: false)
+        .get();
+
+    return snapshot.docs.length;
+  }
 }

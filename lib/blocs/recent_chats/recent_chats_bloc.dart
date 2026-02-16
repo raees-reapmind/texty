@@ -44,12 +44,15 @@ class RecentChatsBloc extends Bloc<RecentChatsEvent, RecentChatsState> {
 
           if (otherUserId.isNotEmpty) {
             final userData = await chatRepository.getUserProfile(otherUserId);
-            log("RecentChatsBloc: Fetched user profile for $otherUserId: $userData");
+            final unreadCount = await chatRepository.getUnreadCount(
+                chat['chatId'], event.currentUid);
+            log("RecentChatsBloc: Fetched user profile for $otherUserId: $userData, unreadCount: $unreadCount");
 
             enrichedChats.add({
               ...chat,
               'otherUserName': userData?['name'] ?? 'User',
               'otherUserPhoto': userData?['profilePictureUrl'] ?? '',
+              'unreadCount': unreadCount,
             });
           }
         }

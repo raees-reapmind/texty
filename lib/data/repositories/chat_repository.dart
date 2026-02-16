@@ -21,4 +21,12 @@ class ChatRepository {
   Future<Map<String, dynamic>?> getUserProfile(String uid) {
     return dataSource.getUserProfile(uid);
   }
+
+  Future<void> markMessagesAsRead(String chatId, String userId) {
+    return dataSource.markMessagesAsRead(chatId, userId);
+  }
+
+  Future<int> getUnreadCount(String chatId, String userId) {
+    return dataSource.getUnreadCount(chatId, userId);
+  }
 }

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:texty/blocs/chat/chat_event.dart';
 import 'package:texty/blocs/chat/chat_state.dart';
@@ -8,9 +9,16 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   ChatBloc(this.repository) : super(ChatInitial()) {
     on<LoadMessages>((event, emit) async {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+
       await emit.forEach(
         repository.getMessages(event.chatId),
-        onData: (messages) => ChatLoaded(messages),
+        onData: (messages) {
+          if (userId != null) {
+            repository.markMessagesAsRead(event.chatId, userId);
+          }
+          return ChatLoaded(messages);
+        },
       );
     });
 

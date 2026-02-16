@@ -280,6 +280,7 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
     final String message = chat['lastMessage'] ?? '';
     final String avatar = chat['otherUserPhoto'] ?? '';
     final String chatId = chat['chatId'] ?? '';
+    final int unreadCount = chat['unreadCount'] ?? 0;
 
     // Time formatting
     String displayTime = "";
@@ -293,8 +294,14 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
       message: message,
       time: displayTime,
       avatarUrl: avatar,
-      unreadCount: 0,
-      onTap: () => context.go('/chat/$chatId'),
+      unreadCount: unreadCount,
+      onTap: () async {
+        await context.push('/chat/$chatId');
+        // Refresh unread counts when returning from chat
+        if (context.mounted) {
+          context.read<RecentChatsBloc>().add(LoadRecentChats(uid));
+        }
+      },
     );
   }
 }
