@@ -7,10 +7,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ChatRepository repository;
 
   ChatBloc(this.repository) : super(ChatInitial()) {
-    on<LoadMessages>((event, emit){
-      repository.getMessages(event.chatId).listen((messages){
-        emit(ChatLoaded(messages));
-      });
+    on<LoadMessages>((event, emit) async {
+      await emit.forEach(
+        repository.getMessages(event.chatId),
+        onData: (messages) => ChatLoaded(messages),
+      );
     });
 
     on<sendMessage>((event, emit) async {

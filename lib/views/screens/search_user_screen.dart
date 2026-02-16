@@ -32,6 +32,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
   @override
   Widget build(BuildContext context) {
     final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    debugPrint("search screen Current UID: $currentUid");
 
     return CommonBackground(
       child: Scaffold(

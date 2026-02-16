@@ -1,14 +1,17 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:texty/blocs/chat/chat_bloc.dart';
 import 'package:texty/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:texty/blocs/auth/auth_bloc.dart';
 import 'package:texty/core/utils/app_router.dart';
 import 'package:texty/data/datasources/firebase_auth_datasource.dart';
+import 'package:texty/data/datasources/firebase_chat_datasource.dart';
 import 'package:texty/data/repositories/auth_repository.dart';
 
 import 'package:texty/blocs/users/user_bloc.dart';
 import 'package:texty/data/datasources/firebase_user_datasource.dart';
+import 'package:texty/data/repositories/chat_repository.dart';
 import 'package:texty/data/repositories/user_repository.dart';
 
 void main() async {
@@ -31,6 +34,10 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (context) =>
               UsersBloc(UserRepository(FirebaseUserDatasource())),
+        ),
+        BlocProvider(
+          create: (context) =>
+              ChatBloc(ChatRepository(FirebaseChatDatasource())),
         ),
       ],
       child: MaterialApp.router(
