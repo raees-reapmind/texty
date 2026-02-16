@@ -27,15 +27,30 @@ class FirebaseChatDatasource {
 
     await chatDocRef.set(
         {
-          'participants': [
-            message.senderId,
-            message.receiverId
-          ],
+          'participants': [message.senderId, message.receiverId],
           'lastMessage': message.message,
           'timestamp': message.timestamp, // Firestore Timestamp
         },
         SetOptions(
             merge:
                 true)); // Use merge: true so you don't overwrite other fields
+  }
+
+  Stream<List<Map<String, dynamic>>> getRecentChats(String uid) {
+    return _firestore
+        .collection('chats')
+        .where('participants', arrayContains: uid)
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) {
+              Map<String, dynamic> data = doc.data();
+              data['chatId'] = doc.id; // Include ID for navigation
+              return data;
+            }).toList());
+  }
+
+  Future<Map<String, dynamic>?> getUserProfile(String uid) async {
+    final doc = await _firestore.collection('users').doc(uid).get();
+    return doc.data();
   }
 }

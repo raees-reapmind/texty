@@ -15,13 +15,3 @@ class ChatLoaded extends ChatState {
   @override
   List<Object?> get props => [messages];
 }
-
-
-
-
-
-
-
-
-
-

@@ -6,11 +6,19 @@ class ChatRepository {
 
   ChatRepository(this.dataSource);
 
-  Stream<List<MessageModel>> getMessages(String chatId){
+  Stream<List<MessageModel>> getMessages(String chatId) {
     return dataSource.getMessages(chatId);
   }
 
-  Future<void> sendMessage(String chatId, MessageModel message){
+  Future<void> sendMessage(String chatId, MessageModel message) {
     return dataSource.sendMessage(chatId, message);
+  }
+
+  Stream<List<Map<String, dynamic>>> getRecentChats(String uid) {
+    return dataSource.getRecentChats(uid);
+  }
+
+  Future<Map<String, dynamic>?> getUserProfile(String uid) {
+    return dataSource.getUserProfile(uid);
   }
 }

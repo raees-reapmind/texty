@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:texty/blocs/chat/chat_bloc.dart';
+import 'package:texty/blocs/recent_chats/recent_chats_bloc.dart';
 import 'package:texty/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,6 +40,9 @@ class MyApp extends StatelessWidget {
           create: (context) =>
               ChatBloc(ChatRepository(FirebaseChatDatasource())),
         ),
+        BlocProvider(
+            create: (context) =>
+                RecentChatsBloc(ChatRepository(FirebaseChatDatasource()))),
       ],
       child: MaterialApp.router(
         title: 'Texty',

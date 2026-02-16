@@ -1,7 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:texty/blocs/recent_chats/recent_chats_bloc.dart';
+import 'package:texty/blocs/recent_chats/recent_chats_event.dart';
+import 'package:texty/blocs/recent_chats/recent_chats_states.dart';
 import 'package:texty/core/theme/app_colors.dart';
 import 'package:texty/views/widgets/chat_list_item.dart';
 import 'package:texty/views/widgets/common_background.dart';
@@ -16,8 +20,18 @@ class RecentChatScreen extends StatefulWidget {
 }
 
 class _RecentChatScreenState extends State<RecentChatScreen> {
+  final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+  
+  @override
+  void initState() {
+    debugPrint("Initializing RecentChatScreen for user $uid");
+    context.read<RecentChatsBloc>().add(LoadRecentChats(uid));
+    super.initState();
+  }
+
   Future<void> _refreshData() async {
     // Firestore streams auto-refresh, add delay for UX
+    context.read<RecentChatsBloc>().add(LoadRecentChats(uid));
     await Future.delayed(const Duration(milliseconds: 500));
   }
 
@@ -171,115 +185,133 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
                     ),
 
                     // Chat List
+                    // Expanded(
+                    // child:
+                    //  StreamBuilder(
+                    //   stream: FirebaseFirestore.instance
+                    //       .collection('chats')
+                    //       .where('participants', arrayContains: uid)
+                    //       .snapshots(),
+                    //   builder: (context, snapshot) {
+                    //     if (!snapshot.hasData) {
+                    //       return const Center(
+                    //           child: CircularProgressIndicator());
+                    //     }
+
+                    //     final docs = snapshot.data!.docs;
+                    //     debugPrint(
+                    //         "Fetched ${docs.length} chats for user $uid");
+
+                    //     if (docs.isEmpty) {
+                    //       return const Center(
+                    //           child: Text(
+                    //               "No chats yet. Start a conversation!"));
+                    //     }
+
+                    //     return ListView.builder(
+                    //   physics: const AlwaysScrollableScrollPhysics(),
+                    //   padding: const EdgeInsets.symmetric(horizontal: 24),
+                    //   itemCount: state.chats.length,
+                    //   itemBuilder: (context, index) {
+                    //     final chat = state.chats[index];
+                    //     final chatId = chat['chatId'] ?? '';
+
+                    //     // 1. Extract Chat Data (now available at top level thanks to our sendMessage fix)
+                    //     final String lastMessage = chat['lastMessage'] ?? 'No messages yet';
+                    //     final Timestamp? timestamp = chat['timestamp'] as Timestamp?;
+
+                    //     // 2. Identify the Other User
+                    //     final List<String> participants = List<String>.from(chat['participants'] ?? []);
+                    //     final String otherUserId = participants.firstWhere(
+                    //       (id) => id != uid,
+                    //       orElse: () => '',
+                    //     );
+
+                    //     // 3. Format the Time
+                    //     String displayTime = "";
+                    //     if (timestamp != null) {
+                    //       final date = timestamp.toDate();
+                    //       final now = DateTime.now();
+                    //       final diff = now.difference(date);
+
+                    //       if (diff.inDays == 0) {
+                    //         displayTime = "${date.hour}:${date.minute.toString().padLeft(2, '0')}";
+                    //       } else if (diff.inDays == 1) {
+                    //         displayTime = "Yesterday";
+                    //       } else {
+                    //         displayTime = "${date.day}/${date.month}";
+                    //       }
+                    //     }
+
+                    //     // 4. Return the UI Item
+                    //     // Note: We still use a StreamBuilder for the USER profile
+                    //     // because user names/avatars change independently of chat messages.
+                    //     return StreamBuilder<DocumentSnapshot>(
+                    //       stream: FirebaseFirestore.instance
+                    //           .collection('users')
+                    //           .doc(otherUserId)
+                    //           .snapshots(),
+                    //       builder: (context, userSnapshot) {
+                    //         String otherUserName = "User";
+                    //         String otherUserPhoto = "";
+
+                    //         if (userSnapshot.hasData && userSnapshot.data?.data() != null) {
+                    //           final userData = userSnapshot.data!.data() as Map<String, dynamic>;
+                    //           otherUserName = userData['name'] ?? "User";
+                    //           otherUserPhoto = userData['photoUrl'] ?? "";
+                    //         }
+
+                    //         return ChatListItem(
+                    //           name: otherUserName,
+                    //           message: lastMessage,
+                    //           time: displayTime,
+                    //           avatarUrl: otherUserPhoto,
+                    //           unreadCount: 0, // You can add logic for this later
+                    //           onTap: () {
+                    //             // Navigate using the chatId
+                    //             context.go('/chat/$chatId');
+                    //           },
+                    //         );
+
+                    //   },
+                    // ),
+                    // }
+                    // ),
+
                     Expanded(
-                      child: StreamBuilder(
-                        stream: FirebaseFirestore.instance
-                            .collection('chats')
-                            .where('participants', arrayContains: uid)
-                            .snapshots(),
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
+                      child: BlocBuilder<RecentChatsBloc, RecentChatsState>(
+                        builder: (context, state) {
+                          if (state is RecentChatsLoading) {
                             return const Center(
                                 child: CircularProgressIndicator());
                           }
 
-                          final docs = snapshot.data!.docs;
-                          debugPrint(
-                              "Fetched ${docs.length} chats for user $uid");
-
-                          if (docs.isEmpty) {
-                            return const Center(
-                                child: Text(
-                                    "No chats yet. Start a conversation!"));
+                          if (state is RecentChatsError) {
+                            return Center(
+                                child: Text("Error: ${state.message}"));
                           }
 
-                          return ListView.builder(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
-                            itemCount: docs.length,
-                            itemBuilder: (context, index) {
-                              final chat = docs[index];
-                              final chatId = chat.id;
-                              final participants =
-                                  List<String>.from(chat['participants'] ?? []);
-
-                              // Get the other user's ID
-                              final otherUserId = participants.firstWhere(
-                                (id) => id != uid,
-                                orElse: () => '',
+                          if (state is RecentChatsLoaded) {
+                            if (state.chats.isEmpty) {
+                              return const Center(
+                                child:
+                                    Text("No chats yet. Start a conversation!"),
                               );
+                            }
 
-                              return StreamBuilder<DocumentSnapshot>(
-                                stream: FirebaseFirestore.instance
-                                    .collection('users')
-                                    .doc(otherUserId)
-                                    .snapshots(),
-                                builder: (context, userSnapshot) {
-                                  String userName = 'User';
-                                  if (userSnapshot.hasData &&
-                                      userSnapshot.data?.data() != null) {
-                                    final userData = userSnapshot.data!.data()
-                                        as Map<String, dynamic>;
-                                    userName = userData['name'] ?? 'User';
-                                  }
+                            return ListView.builder(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 24),
+                              itemCount: state.chats.length,
+                              itemBuilder: (context, index) {
+                                final chat = state.chats[index];
+                                return _buildChatItem(chat);
+                              },
+                            );
+                          }
 
-                                  // Get last message from subcollection
-                                  return StreamBuilder<QuerySnapshot>(
-                                    stream: FirebaseFirestore.instance
-                                        .collection('chats')
-                                        .doc(chatId)
-                                        .collection('messages')
-                                        .orderBy('timestamp', descending: true)
-                                        .limit(1)
-                                        .snapshots(),
-                                    builder: (context, messageSnapshot) {
-                                      String lastMessage = 'No messages yet';
-                                      String lastTime = '';
-
-                                      if (messageSnapshot.hasData &&
-                                          messageSnapshot
-                                              .data!.docs.isNotEmpty) {
-                                        final lastMsg =
-                                            messageSnapshot.data!.docs.first;
-                                        lastMessage = lastMsg['message'] ?? '';
-
-                                        if (lastMsg['timestamp'] != null) {
-                                          final timestamp =
-                                              (lastMsg['timestamp']
-                                                      as Timestamp)
-                                                  .toDate();
-                                          final now = DateTime.now();
-                                          final difference =
-                                              now.difference(timestamp);
-
-                                          if (difference.inDays == 0) {
-                                            lastTime =
-                                                '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}';
-                                          } else if (difference.inDays == 1) {
-                                            lastTime = 'Yesterday';
-                                          } else {
-                                            lastTime =
-                                                '${timestamp.day}/${timestamp.month}/${timestamp.year}';
-                                          }
-                                        }
-                                      }
-
-                                      return ChatListItem(
-                                        name: userName,
-                                        message: lastMessage,
-                                        time: lastTime,
-                                        avatarUrl: "",
-                                        unreadCount: 0,
-                                        onTap: () {
-                                          context.go('/chat/$chatId');
-                                        },
-                                      );
-                                    },
-                                  );
-                                },
-                              );
-                            },
-                          );
+                          return const SizedBox.shrink();
                         },
                       ),
                     ),
@@ -290,6 +322,30 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildChatItem(Map<String, dynamic> chat) {
+    // These fields are populated by your BLoC's UpdateRecentChats logic
+    final String name = chat['otherUserName'] ?? 'User';
+    final String message = chat['lastMessage'] ?? '';
+    final String avatar = chat['otherUserPhoto'] ?? '';
+    final String chatId = chat['chatId'] ?? '';
+
+    // Time formatting
+    String displayTime = "";
+    if (chat['timestamp'] != null) {
+      final date = (chat['timestamp'] as Timestamp).toDate();
+      displayTime = "${date.hour}:${date.minute.toString().padLeft(2, '0')}";
+    }
+
+    return ChatListItem(
+      name: name,
+      message: message,
+      time: displayTime,
+      avatarUrl: avatar,
+      unreadCount: 0,
+      onTap: () => context.go('/chat/$chatId'),
     );
   }
 }

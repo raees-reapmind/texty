@@ -194,17 +194,6 @@ class LoginScreen extends StatelessWidget {
                     ),
 
                     const SizedBox(height: 20),
-                    /* 
-                    // Optional Social Login or Divider could go here
-                     const Row(children: [
-                        Expanded(child: Divider()),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
-                          child: Text("Or Login with"),
-                        ),
-                        Expanded(child: Divider()),
-                     ]),
-                     */
                   ],
                 ),
               ),

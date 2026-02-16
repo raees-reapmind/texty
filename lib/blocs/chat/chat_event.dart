@@ -11,7 +11,7 @@ class LoadMessages extends ChatEvent {
   LoadMessages(this.chatId);
 }
 
-class sendMessage extends ChatEvent{
+class sendMessage extends ChatEvent {
   final String chatId;
   final MessageModel message;
 
