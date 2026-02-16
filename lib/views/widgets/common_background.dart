@@ -3,8 +3,15 @@ import 'package:texty/core/theme/app_colors.dart';
 
 class CommonBackground extends StatelessWidget {
   final Widget child;
+  final bool top;
+  final bool bottom;
 
-  const CommonBackground({Key? key, required this.child}) : super(key: key);
+  const CommonBackground({
+    Key? key,
+    required this.child,
+    this.top = true,
+    this.bottom = true,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +60,11 @@ class CommonBackground extends StatelessWidget {
           ),
 
           // Main Content
-          SafeArea(child: child),
+          SafeArea(
+            top: top,
+            bottom: bottom,
+            child: child,
+          ),
         ],
       ),
     );

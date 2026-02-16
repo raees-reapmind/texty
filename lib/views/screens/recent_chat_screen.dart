@@ -45,6 +45,7 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
 
     return CommonBackground(
+      top: true,
       child: RefreshIndicator(
         onRefresh: _refreshData,
         child: CustomScrollView(
