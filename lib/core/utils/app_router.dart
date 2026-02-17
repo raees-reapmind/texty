@@ -1,7 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:texty/blocs/chat/chat_bloc.dart';
+import 'package:texty/data/datasources/firebase_chat_datasource.dart';
+import 'package:texty/data/repositories/chat_repository.dart';
 import 'package:texty/views/screens/chat_screen.dart';
 import 'package:texty/views/screens/discover_screen.dart';
 import 'package:texty/views/screens/login_screen.dart';
@@ -9,6 +13,7 @@ import 'package:texty/views/screens/recent_chat_screen.dart';
 import 'package:texty/views/screens/signup_screen.dart';
 import 'package:texty/views/screens/settings_screen.dart';
 import 'package:texty/views/screens/search_user_screen.dart';
+import 'package:texty/views/screens/photo_view_screen.dart';
 import 'package:texty/views/screens/splash_screen.dart';
 import 'package:texty/views/widgets/scaffold_with_nav_bar.dart';
 
@@ -49,6 +54,18 @@ class AppRouter {
           builder: (context, state) => const SplashScreen(),
         ),
         GoRoute(
+          path: "/photo-view",
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (context, state) {
+            final Map<String, dynamic> extra =
+                state.extra as Map<String, dynamic>;
+            return PhotoViewScreen(
+              base64Image: extra['base64Image'] as String,
+              heroTag: extra['heroTag'] as String,
+            );
+          },
+        ),
+        GoRoute(
           path: "/login",
           builder: (context, state) => LoginScreen(),
         ),
@@ -80,7 +97,12 @@ class AppRouter {
                   parentNavigatorKey: _rootNavigatorKey,
                   builder: (context, state) {
                     final chatId = state.pathParameters['chatId']!;
-                    return ChatScreen(chatId: chatId);
+                    return BlocProvider(
+                      create: (context) => ChatBloc(
+                        ChatRepository(FirebaseChatDatasource()),
+                      ),
+                      child: ChatScreen(chatId: chatId),
+                    );
                   },
                 ),
               ],

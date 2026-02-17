@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:texty/core/theme/app_colors.dart';
 
 class ChatListItem extends StatelessWidget {
@@ -31,27 +32,40 @@ class ChatListItem extends StatelessWidget {
         child: Row(
           children: [
             // Avatar
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.grey[200],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(25),
-                child: avatarUrl.isNotEmpty
-                    ? _buildAvatarImage(avatarUrl)
-                    : Center(
-                        child: Text(
-                          name.isNotEmpty ? name[0].toUpperCase() : '?',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textSecondary,
-                            fontSize: 18,
+            InkWell(
+              onTap: avatarUrl.isNotEmpty
+                  ? () {
+                      context.push('/photo-view', extra: {
+                        'base64Image': avatarUrl,
+                        'heroTag': 'avatar_$name',
+                      });
+                    }
+                  : null,
+              child: Hero(
+                tag: 'avatar_$name',
+                child: Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.grey[200],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(25),
+                    child: avatarUrl.isNotEmpty
+                        ? _buildAvatarImage(avatarUrl)
+                        : Center(
+                            child: Text(
+                              name.isNotEmpty ? name[0].toUpperCase() : '?',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textSecondary,
+                                fontSize: 18,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 16),

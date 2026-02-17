@@ -1,5 +1,4 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:texty/blocs/chat/chat_bloc.dart';
 import 'package:texty/blocs/recent_chats/recent_chats_bloc.dart';
 import 'package:texty/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -36,10 +35,11 @@ class MyApp extends StatelessWidget {
           create: (context) =>
               UsersBloc(UserRepository(FirebaseUserDatasource())),
         ),
-        BlocProvider(
-          create: (context) =>
-              ChatBloc(ChatRepository(FirebaseChatDatasource())),
-        ),
+        // ChatBloc is now provided locally in ChatScreen to manage its lifecycle correctly
+        // BlocProvider(
+        //   create: (context) =>
+        //       ChatBloc(ChatRepository(FirebaseChatDatasource())),
+        // ),
         BlocProvider(
             create: (context) =>
                 RecentChatsBloc(ChatRepository(FirebaseChatDatasource()))),
