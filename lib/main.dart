@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:texty/blocs/profile/profile_bloc.dart';
 import 'package:texty/blocs/recent_chats/recent_chats_bloc.dart';
 import 'package:texty/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -25,30 +26,41 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
+    final firebaseAuthDatasource = FirebaseAuthDatasource();
+    final firebaseUserDatasource = FirebaseUserDatasource();
+    final firebaseChatDatasource = FirebaseChatDatasource();
+
+    final authRepository = AuthRepository(firebaseAuthDatasource);
+    final userRepository = UserRepository(firebaseUserDatasource);
+    final chatRepository = ChatRepository(firebaseChatDatasource);
+
+    return MultiRepositoryProvider(
       providers: [
-        BlocProvider(
-          create: (context) =>
-              AuthBloc(AuthRepository(FirebaseAuthDatasource())),
-        ),
-        BlocProvider(
-          create: (context) =>
-              UsersBloc(UserRepository(FirebaseUserDatasource())),
-        ),
-        // ChatBloc is now provided locally in ChatScreen to manage its lifecycle correctly
-        // BlocProvider(
-        //   create: (context) =>
-        //       ChatBloc(ChatRepository(FirebaseChatDatasource())),
-        // ),
-        BlocProvider(
-            create: (context) =>
-                RecentChatsBloc(ChatRepository(FirebaseChatDatasource()))),
+        RepositoryProvider.value(value: authRepository),
+        RepositoryProvider.value(value: userRepository),
+        RepositoryProvider.value(value: chatRepository),
       ],
-      child: MaterialApp.router(
-        title: 'Texty',
-        theme: AppTheme.lightTheme,
-        debugShowCheckedModeBanner: false,
-        routerConfig: AppRouter.router,
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (context) => AuthBloc(authRepository),
+          ),
+          BlocProvider(
+            create: (context) => UsersBloc(userRepository),
+          ),
+          BlocProvider(
+            create: (context) => ProfileBloc(userRepository),
+          ),
+          BlocProvider(
+            create: (context) => RecentChatsBloc(chatRepository),
+          ),
+        ],
+        child: MaterialApp.router(
+          title: 'Texty',
+          theme: AppTheme.lightTheme,
+          debugShowCheckedModeBanner: false,
+          routerConfig: AppRouter.router,
+        ),
       ),
     );
   }

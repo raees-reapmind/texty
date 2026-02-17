@@ -50,6 +50,7 @@ class RecentChatsBloc extends Bloc<RecentChatsEvent, RecentChatsState> {
 
             enrichedChats.add({
               ...chat,
+              'otherUserId': otherUserId,
               'otherUserName': userData?['name'] ?? 'User',
               'otherUserPhoto': userData?['profilePictureUrl'] ?? '',
               'unreadCount': unreadCount,

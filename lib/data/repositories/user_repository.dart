@@ -9,4 +9,16 @@ class UserRepository {
   Stream<List<UserModel>> searchUsers(String query) {
     return datasource.searchUsers(query);
   }
+
+  Stream<UserModel?> getUserStream(String uid) {
+    return datasource.getUserStream(uid);
+  }
+
+  Future<UserModel?> getUserData(String uid) {
+    return datasource.getUserData(uid);
+  }
+
+  Future<void> updateUserProfile(String uid, Map<String, dynamic> data) {
+    return datasource.updateUserProfile(uid, data);
+  }
 }

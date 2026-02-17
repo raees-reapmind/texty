@@ -25,4 +25,23 @@ class FirebaseUserDatasource {
       }).toList();
     });
   }
+
+  Stream<UserModel?> getUserStream(String uid) {
+    return _fireStore.collection('users').doc(uid).snapshots().map((doc) =>
+        doc.exists && doc.data() != null
+            ? UserModel.fromMap(doc.data()!)
+            : null);
+  }
+
+  Future<UserModel?> getUserData(String uid) async {
+    final doc = await _fireStore.collection('users').doc(uid).get();
+    if (doc.exists && doc.data() != null) {
+      return UserModel.fromMap(doc.data()!);
+    }
+    return null;
+  }
+
+  Future<void> updateUserProfile(String uid, Map<String, dynamic> data) async {
+    await _fireStore.collection('users').doc(uid).update(data);
+  }
 }

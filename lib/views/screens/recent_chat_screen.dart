@@ -8,10 +8,15 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:texty/blocs/auth/auth_bloc.dart';
 import 'package:texty/blocs/auth/auth_states.dart';
+import 'package:texty/blocs/profile/profile_bloc.dart';
+import 'package:texty/blocs/profile/profile_event.dart';
+import 'package:texty/blocs/profile/profile_state.dart';
 import 'package:texty/blocs/recent_chats/recent_chats_bloc.dart';
 import 'package:texty/blocs/recent_chats/recent_chats_event.dart';
 import 'package:texty/blocs/recent_chats/recent_chats_states.dart';
 import 'package:texty/core/theme/app_colors.dart';
+import 'package:texty/data/repositories/user_repository.dart';
+import 'package:texty/models/user_model.dart';
 import 'package:texty/views/widgets/chat_list_item.dart';
 import 'package:texty/views/widgets/common_background.dart';
 import 'package:texty/views/widgets/slidable_wrapper.dart';
@@ -31,12 +36,14 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
   void initState() {
     debugPrint("Initializing RecentChatScreen for user $uid");
     context.read<RecentChatsBloc>().add(LoadRecentChats(uid));
+    context.read<ProfileBloc>().add(LoadProfile(uid));
     super.initState();
   }
 
   Future<void> _refreshData() async {
     // Firestore streams auto-refresh, add delay for UX
     context.read<RecentChatsBloc>().add(LoadRecentChats(uid));
+    context.read<ProfileBloc>().add(LoadProfile(uid));
     await Future.delayed(const Duration(milliseconds: 500));
   }
 
@@ -63,28 +70,34 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            BlocBuilder<AuthBloc, AuthStates>(
+                            BlocBuilder<ProfileBloc, ProfileState>(
                               builder: (context, state) {
                                 String name = "User";
-                                if (state is AuthAuthenticated) {
-                                  // Again, use userModel here
-                                  name = state.userModel.name;
-                                  print(
-                                      "RecentChatScreen: Authenticated user name: $name");
+                                String? profilePic;
+
+                                if (state is ProfileLoaded) {
+                                  name = state.user.name;
+                                  profilePic = state.user.profilePictureUrl;
+                                } else if (state is ProfileUpdated) {
+                                  name = state.user.name;
+                                  profilePic = state.user.profilePictureUrl;
                                 }
+
                                 return Expanded(
                                   child: Row(
                                     children: [
                                       CircleAvatar(
                                         radius: 22,
                                         backgroundColor: Colors.grey[200],
-                                        backgroundImage: state
-                                                    is AuthAuthenticated &&
-                                                state.userModel
-                                                        .profilePictureUrl !=
-                                                    null
-                                            ? MemoryImage(base64Decode(state
-                                                .userModel.profilePictureUrl!))
+                                        backgroundImage: profilePic != null &&
+                                                profilePic.isNotEmpty
+                                            ? MemoryImage(
+                                                base64Decode(profilePic))
+                                            : null,
+                                        child: profilePic == null ||
+                                                profilePic.isEmpty
+                                            ? const Icon(Icons.person,
+                                                color: Colors.grey)
                                             : null,
                                       ),
                                       const SizedBox(width: 12),
@@ -152,12 +165,16 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
                                 scrollDirection: Axis.horizontal,
                                 children: [
                                   // YOUR AVATAR (First Item)
-                                  BlocBuilder<AuthBloc, AuthStates>(
-                                    builder: (context, authState) {
+                                  BlocBuilder<ProfileBloc, ProfileState>(
+                                    builder: (context, profileState) {
                                       String? myImage;
-                                      if (authState is AuthAuthenticated) {
-                                        myImage = authState
-                                            .userModel.profilePictureUrl;
+                                      if (profileState is ProfileLoaded) {
+                                        myImage =
+                                            profileState.user.profilePictureUrl;
+                                      } else if (profileState
+                                          is ProfileUpdated) {
+                                        myImage =
+                                            profileState.user.profilePictureUrl;
                                       }
                                       return Padding(
                                         padding:
@@ -174,16 +191,27 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
                                   // CHATTED USERS (Subsequent Items)
                                   if (recentState is RecentChatsLoaded)
                                     ...recentState.chats.map((chat) {
-                                      return Padding(
-                                        padding:
-                                            const EdgeInsets.only(right: 8.0),
-                                        child: StoryAvatar(
-                                          name: chat['otherUserName'] ?? 'User',
-                                          profilePictureUrl:
-                                              chat['otherUserPhoto'],
-                                          isAddStory: false,
-                                        ),
-                                      );
+                                      final otherUserId = chat['otherUserId'];
+                                      return StreamBuilder(
+                                          stream: RepositoryProvider.of<
+                                                  UserRepository>(context)
+                                              .getUserStream(otherUserId),
+                                          builder: (context, snapshot) {
+                                            final user = snapshot.data;
+                                            return Padding(
+                                              padding: const EdgeInsets.only(
+                                                  right: 8.0),
+                                              child: StoryAvatar(
+                                                name: user?.name ??
+                                                    chat['otherUserName'] ??
+                                                    'User',
+                                                profilePictureUrl:
+                                                    user?.profilePictureUrl ??
+                                                        chat['otherUserPhoto'],
+                                                isAddStory: false,
+                                              ),
+                                            );
+                                          });
                                     }).toList(),
                                 ],
                               );
@@ -330,9 +358,10 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
 
   Widget _buildChatItem(Map<String, dynamic> chat) {
     // These fields are populated by your BLoC's UpdateRecentChats logic
-    final String name = chat['otherUserName'] ?? 'User';
+    final String otherUserId = chat['otherUserId'] ?? '';
+    final String initialName = chat['otherUserName'] ?? 'User';
+    final String initialAvatar = chat['otherUserPhoto'] ?? '';
     final String message = chat['lastMessage'] ?? '';
-    final String avatar = chat['otherUserPhoto'] ?? '';
     final String chatId = chat['chatId'] ?? '';
     final int unreadCount = chat['unreadCount'] ?? 0;
 
@@ -343,18 +372,24 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
       displayTime = DateFormat('hh:mm a').format(date);
     }
 
-    return ChatListItem(
-      name: name,
-      message: message,
-      time: displayTime,
-      avatarUrl: avatar,
-      unreadCount: unreadCount,
-      onTap: () async {
-        await context.push('/chat/$chatId');
-        // Refresh unread counts when returning from chat
-        if (context.mounted) {
-          context.read<RecentChatsBloc>().add(LoadRecentChats(uid));
-        }
+    return StreamBuilder<UserModel?>(
+      stream: context.read<UserRepository>().getUserStream(otherUserId),
+      builder: (context, snapshot) {
+        final user = snapshot.data;
+        return ChatListItem(
+          name: user?.name ?? initialName,
+          message: message,
+          time: displayTime,
+          avatarUrl: user?.profilePictureUrl ?? initialAvatar,
+          unreadCount: unreadCount,
+          onTap: () async {
+            await context.push('/chat/$chatId');
+            // Refresh unread counts when returning from chat
+            if (context.mounted) {
+              context.read<RecentChatsBloc>().add(LoadRecentChats(uid));
+            }
+          },
+        );
       },
     );
   }
