@@ -9,6 +9,7 @@ import 'package:texty/views/screens/recent_chat_screen.dart';
 import 'package:texty/views/screens/signup_screen.dart';
 import 'package:texty/views/screens/settings_screen.dart';
 import 'package:texty/views/screens/search_user_screen.dart';
+import 'package:texty/views/screens/splash_screen.dart';
 import 'package:texty/views/widgets/scaffold_with_nav_bar.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -17,13 +18,18 @@ final _shellNavigatorKey = GlobalKey<NavigatorState>();
 class AppRouter {
   static final GoRouter router = GoRouter(
       navigatorKey: _rootNavigatorKey,
-      initialLocation: "/login",
+      initialLocation: "/splash",
       refreshListenable:
           GoRouterRefreshStream(FirebaseAuth.instance.authStateChanges()),
       redirect: (context, state) {
         final isLoggedIn = FirebaseAuth.instance.currentUser != null;
         debugPrint(
             "Auth State Changed: isLoggedIn = $isLoggedIn, location = ${state.matchedLocation}");
+
+        if (state.matchedLocation == "/splash") {
+          return null;
+        }
+
         final isAuthRoute = state.matchedLocation == "/login" ||
             state.matchedLocation == "/signup";
 
@@ -38,6 +44,10 @@ class AppRouter {
         return null;
       },
       routes: [
+        GoRoute(
+          path: "/splash",
+          builder: (context, state) => const SplashScreen(),
+        ),
         GoRoute(
           path: "/login",
           builder: (context, state) => LoginScreen(),
