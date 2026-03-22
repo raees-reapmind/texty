@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:texty/blocs/auth/auth_states.dart';
 import 'package:texty/core/theme/app_colors.dart';
 import 'package:texty/views/widgets/common_background.dart';
+import 'package:texty/views/widgets/custom_password_field.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_event.dart';
 import 'signup_screen.dart';
@@ -87,13 +88,9 @@ class LoginScreen extends StatelessWidget {
                     const SizedBox(height: 20),
 
                     // Password Field
-                    TextFormField(
+                    CustomPasswordField(
                       controller: passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: "Password",
-                        prefixIcon: Icon(Icons.lock_outline),
-                      ),
+                      labelText: "Password",
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return "Password required";

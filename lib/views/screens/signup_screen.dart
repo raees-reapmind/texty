@@ -9,6 +9,7 @@ import 'package:texty/blocs/auth/auth_event.dart';
 import 'package:texty/blocs/auth/auth_states.dart';
 import 'package:texty/core/theme/app_colors.dart';
 import 'package:texty/views/widgets/common_background.dart';
+import 'package:texty/views/widgets/custom_password_field.dart';
 
 class SignupScreen extends StatefulWidget {
   SignupScreen({Key? key}) : super(key: key);
@@ -171,13 +172,9 @@ class _SignupScreenState extends State<SignupScreen> {
                     const SizedBox(height: 20),
 
                     // Password Field
-                    TextFormField(
+                    CustomPasswordField(
                       controller: passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: "Password",
-                        prefixIcon: Icon(Icons.lock_outline),
-                      ),
+                      labelText: "Password",
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return "Password required";
