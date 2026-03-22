@@ -1,5 +1,7 @@
 # texty
 
+version : 3.38
+
 A new Flutter project.
 
 ## Getting Started
