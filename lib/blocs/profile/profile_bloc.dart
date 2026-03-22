@@ -9,18 +9,19 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
   ProfileBloc(this.userRepository) : super(ProfileInitial()) {
     on<LoadProfile>((event, emit) async {
-      emit(ProfileLoading());
-      try {
-        final user = await userRepository.getUserData(event.uid);
-        debugPrint("ProfileBloc: User data: $user");
-        if (user != null) {
-          emit(ProfileLoaded(user));
-        } else {
-          emit(const ProfileError("User not found"));
-        }
-      } catch (e) {
-        emit(ProfileError(e.toString()));
-      }
+      debugPrint("ProfileBloc: Loading profile for ${event.uid}");
+      await emit.forEach(
+        userRepository.getUserStream(event.uid),
+        onData: (user) {
+          debugPrint("ProfileBloc: Received user update: $user");
+          if (user != null) {
+            return ProfileLoaded(user);
+          } else {
+            return const ProfileError("User not found");
+          }
+        },
+        onError: (e, stack) => ProfileError(e.toString()),
+      );
     });
 
     on<UpdateProfile>((event, emit) async {

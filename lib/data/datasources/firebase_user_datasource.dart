@@ -44,4 +44,11 @@ class FirebaseUserDatasource {
   Future<void> updateUserProfile(String uid, Map<String, dynamic> data) async {
     await _fireStore.collection('users').doc(uid).update(data);
   }
+
+  Future<void> updateUserStatus(String uid, bool isOnline) async {
+    await _fireStore.collection('users').doc(uid).update({
+      'isOnline': isOnline,
+      'lastSeen': FieldValue.serverTimestamp(),
+    });
+  }
 }

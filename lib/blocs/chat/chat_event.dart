@@ -16,4 +16,18 @@ class sendMessage extends ChatEvent {
   final MessageModel message;
 
   sendMessage(this.chatId, this.message);
+
+  @override
+  List<Object?> get props => [chatId, message];
+}
+
+class SetTypingStatus extends ChatEvent {
+  final String chatId;
+  final String uid;
+  final bool isTyping;
+
+  SetTypingStatus(this.chatId, this.uid, this.isTyping);
+
+  @override
+  List<Object?> get props => [chatId, uid, isTyping];
 }

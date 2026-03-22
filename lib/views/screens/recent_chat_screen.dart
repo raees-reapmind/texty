@@ -382,6 +382,7 @@ class _RecentChatScreenState extends State<RecentChatScreen> {
           time: displayTime,
           avatarUrl: user?.profilePictureUrl ?? initialAvatar,
           unreadCount: unreadCount,
+          isOnline: user?.isOnline ?? false, // Pass online status
           onTap: () async {
             await context.push('/chat/$chatId');
             // Refresh unread counts when returning from chat

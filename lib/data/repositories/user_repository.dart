@@ -21,4 +21,8 @@ class UserRepository {
   Future<void> updateUserProfile(String uid, Map<String, dynamic> data) {
     return datasource.updateUserProfile(uid, data);
   }
+
+  Future<void> updateUserStatus(String uid, bool isOnline) {
+    return datasource.updateUserStatus(uid, isOnline);
+  }
 }

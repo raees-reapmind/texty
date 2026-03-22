@@ -10,8 +10,9 @@ class ChatInitial extends ChatState {}
 
 class ChatLoaded extends ChatState {
   final List<MessageModel> messages;
-  ChatLoaded(this.messages);
+  final Map<String, bool> typingUsers;
+  ChatLoaded(this.messages, {this.typingUsers = const {}});
 
   @override
-  List<Object?> get props => [messages];
+  List<Object?> get props => [messages, typingUsers];
 }

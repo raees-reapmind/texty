@@ -1,16 +1,22 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class UserModel {
   final String uid;
   final String name;
   final String email;
   final String searchName;
-  final String? profilePictureUrl; // Add this field
+  final String? profilePictureUrl;
+  final bool isOnline;
+  final DateTime? lastSeen;
 
   UserModel({
     required this.uid,
     required this.name,
     required this.email,
     required this.searchName,
-    this.profilePictureUrl, // Add it to constructor
+    this.profilePictureUrl,
+    this.isOnline = false,
+    this.lastSeen,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
@@ -19,7 +25,11 @@ class UserModel {
       name: map['name'] ?? '',
       email: map['email'] ?? '',
       searchName: map['searchName'] ?? '',
-      profilePictureUrl: map['profilePictureUrl'], // Add this line
+      profilePictureUrl: map['profilePictureUrl'],
+      isOnline: map['isOnline'] ?? false,
+      lastSeen: map['lastSeen'] != null
+          ? (map['lastSeen'] as Timestamp).toDate()
+          : null,
     );
   }
 
@@ -29,7 +39,9 @@ class UserModel {
       'name': name,
       'email': email,
       'searchName': searchName,
-      'profilePictureUrl': profilePictureUrl, // Add this line
+      'profilePictureUrl': profilePictureUrl,
+      'isOnline': isOnline,
+      'lastSeen': lastSeen != null ? Timestamp.fromDate(lastSeen!) : null,
     };
   }
 }

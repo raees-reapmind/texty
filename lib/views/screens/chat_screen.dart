@@ -11,6 +11,7 @@ import 'package:texty/blocs/chat/chat_state.dart';
 import 'package:texty/core/theme/app_colors.dart';
 import 'package:texty/models/message_model.dart';
 import 'package:texty/views/widgets/common_background.dart';
+import 'package:texty/views/widgets/typing_indicator.dart';
 
 class ChatScreen extends StatefulWidget {
   final String chatId;
@@ -23,6 +24,8 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  bool _isTyping = false;
+  DateTime? _lastTypingTime;
 
   @override
   void initState() {
@@ -31,10 +34,38 @@ class _ChatScreenState extends State<ChatScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ChatBloc>().add(LoadMessages(widget.chatId));
     });
+
+    _messageController.addListener(_onTypingChanged);
+  }
+
+  void _onTypingChanged() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    if (_messageController.text.isNotEmpty && !_isTyping) {
+      _isTyping = true;
+      context.read<ChatBloc>().add(SetTypingStatus(widget.chatId, uid, true));
+    } else if (_messageController.text.isEmpty && _isTyping) {
+      _isTyping = false;
+      context.read<ChatBloc>().add(SetTypingStatus(widget.chatId, uid, false));
+    }
+
+    _lastTypingTime = DateTime.now();
+    
+    // Auto reset typing status after 3 seconds of inactivity
+    Future.delayed(const Duration(seconds: 3), () {
+      if (_lastTypingTime != null &&
+          DateTime.now().difference(_lastTypingTime!).inSeconds >= 3 &&
+          _isTyping) {
+        _isTyping = false;
+        context.read<ChatBloc>().add(SetTypingStatus(widget.chatId, uid, false));
+      }
+    });
   }
 
   @override
   void dispose() {
+    _messageController.removeListener(_onTypingChanged);
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -73,7 +104,18 @@ class _ChatScreenState extends State<ChatScreen> {
               child: BlocBuilder<ChatBloc, ChatState>(
                 builder: (context, state) {
                   if (state is ChatLoaded) {
-                    return _buildMessagesList(state.messages, currentUserId);
+                    // Scroll to bottom after rebuild
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (_scrollController.hasClients) {
+                        _scrollController.animateTo(
+                          _scrollController.position.maxScrollExtent,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOut,
+                        );
+                      }
+                    });
+                    return _buildMessagesList(
+                        state.messages, currentUserId, state.typingUsers);
                   }
                   return const Center(child: CircularProgressIndicator());
                 },
@@ -118,9 +160,11 @@ class _ChatScreenState extends State<ChatScreen> {
           .snapshots(),
       builder: (context, snapshot) {
         String userName = "User";
+        bool isOnline = false;
         if (snapshot.hasData && snapshot.data?.data() != null) {
           final data = snapshot.data!.data() as Map<String, dynamic>;
           userName = data['name'] ?? "User";
+          isOnline = data['isOnline'] ?? false;
         }
 
         return Row(
@@ -152,15 +196,59 @@ class _ChatScreenState extends State<ChatScreen> {
                         )
                       : null,
                 ),
+                if (isOnline)
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                    ),
+                  ),
               ],
             ),
             const SizedBox(width: 8),
-            Text(
-              userName,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    userName,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  BlocBuilder<ChatBloc, ChatState>(
+                    builder: (context, state) {
+                      if (state is ChatLoaded &&
+                          state.typingUsers[otherUserId] == true) {
+                        return const Text(
+                          "typing...",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.primaryPurple,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        );
+                      }
+                      return Text(
+                        isOnline ? "Online" : "Offline",
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isOnline ? Colors.green : AppColors.textSecondary,
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ],
@@ -169,8 +257,12 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildMessagesList(List<MessageModel> messages, String currentUserId) {
-    if (messages.isEmpty) {
+  Widget _buildMessagesList(
+      List<MessageModel> messages, String currentUserId, Map<String, bool> typingUsers) {
+    final otherUserId = _getOtherUserId();
+    final isOtherTyping = typingUsers[otherUserId] ?? false;
+
+    if (messages.isEmpty && !isOtherTyping) {
       return const Center(
         child: Text(
           "No messages yet. Start the conversation!",
@@ -182,8 +274,15 @@ class _ChatScreenState extends State<ChatScreen> {
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.all(16),
-      itemCount: messages.length,
+      itemCount: messages.length + (isOtherTyping ? 1 : 0),
       itemBuilder: (context, index) {
+        if (index == messages.length) {
+          return TypingIndicator(
+            showIndicator: isOtherTyping,
+            avatar: _buildUserAvatar(otherUserId),
+          );
+        }
+
         final message = messages[index];
         final isMe = message.senderId == currentUserId;
         final showDate = _shouldShowDate(messages, index);

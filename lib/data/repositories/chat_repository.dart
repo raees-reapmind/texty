@@ -33,4 +33,12 @@ class ChatRepository {
   Future<void> deleteChat(String chatId) {
     return dataSource.deleteChat(chatId);
   }
+
+  Future<void> setTypingStatus(String chatId, String uid, bool isTyping) {
+    return dataSource.setTypingStatus(chatId, uid, isTyping);
+  }
+
+  Stream<dynamic> getChatStream(String chatId) {
+    return dataSource.getChatStream(chatId);
+  }
 }

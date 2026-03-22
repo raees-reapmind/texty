@@ -105,4 +105,15 @@ class FirebaseChatDatasource {
       rethrow;
     }
   }
+
+  Future<void> setTypingStatus(
+      String chatId, String uid, bool isTyping) async {
+    await _firestore.collection('chats').doc(chatId).set({
+      'typing': {uid: isTyping}
+    }, SetOptions(merge: true));
+  }
+
+  Stream<DocumentSnapshot<Map<String, dynamic>>> getChatStream(String chatId) {
+    return _firestore.collection('chats').doc(chatId).snapshots();
+  }
 }

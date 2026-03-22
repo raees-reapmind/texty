@@ -8,19 +8,21 @@ class ChatListItem extends StatelessWidget {
   final String name;
   final String message;
   final String time;
-  final String avatarUrl;
+  final String? avatarUrl;
   final int unreadCount;
   final VoidCallback onTap;
+  final bool isOnline;
 
   const ChatListItem({
-    Key? key,
     required this.name,
     required this.message,
     required this.time,
-    required this.avatarUrl,
-    required this.unreadCount,
+    this.avatarUrl,
+    this.unreadCount = 0,
     required this.onTap,
-  }) : super(key: key);
+    this.isOnline = false,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +35,7 @@ class ChatListItem extends StatelessWidget {
           children: [
             // Avatar
             InkWell(
-              onTap: avatarUrl.isNotEmpty
+              onTap: avatarUrl?.isNotEmpty ?? false
                   ? () {
                       context.push('/photo-view', extra: {
                         'base64Image': avatarUrl,
@@ -43,28 +45,46 @@ class ChatListItem extends StatelessWidget {
                   : null,
               child: Hero(
                 tag: 'avatar_$name',
-                child: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.grey[200],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(25),
-                    child: avatarUrl.isNotEmpty
-                        ? _buildAvatarImage(avatarUrl)
-                        : Center(
-                            child: Text(
-                              name.isNotEmpty ? name[0].toUpperCase() : '?',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textSecondary,
-                                fontSize: 18,
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.grey[200],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(25),
+                        child: avatarUrl != null && avatarUrl!.isNotEmpty
+                            ? _buildAvatarImage(avatarUrl!)
+                            : Center(
+                                child: Text(
+                                  name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textSecondary,
+                                    fontSize: 18,
+                                  ),
+                                ),
                               ),
-                            ),
+                      ),
+                    ),
+                    if (isOnline)
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          width: 14,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
                           ),
-                  ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
