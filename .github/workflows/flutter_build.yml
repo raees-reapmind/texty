@@ -90,14 +90,3 @@ jobs:
         with:
           name: ios-release-archive
           path: build/ios/archive/Runner.xcarchive
-```
-
----
-
-## The exact sequence that must happen
-```
-flutter pub get
-    └── generates → ios/Flutter/podhelper.rb       ← Podfile requires this
-    └── generates → ios/Flutter/Generated.xcconfig  ← contains FLUTTER_ROOT path
-          └── pod install reads FLUTTER_ROOT
-                └── flutter build ipa
