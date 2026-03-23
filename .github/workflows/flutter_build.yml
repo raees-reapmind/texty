@@ -62,20 +62,23 @@ jobs:
       - name: Flutter Doctor
         run: flutter doctor -v
 
+      # Fix 1: Pin CocoaPods to a stable version (avoid 1.16.x bug)
+      - name: Install CocoaPods 1.15.2
+        run: |
+          sudo gem uninstall cocoapods --all --ignore-dependencies || true
+          sudo gem install cocoapods -v 1.15.2
+          pod --version
+
       - name: Get dependencies
         run: flutter pub get
 
-      # ADD THIS: Generate Flutter iOS build files before pod install
-      - name: Generate Flutter iOS files
-        run: |
-          cd ios
-          flutter precache --ios
-
-      # ADD THIS: Explicit pod install with repo update
+      # Fix 2: Use --clean-install instead of --repo-update
       - name: Install CocoaPods dependencies
         run: |
           cd ios
-          pod install --repo-update
+          pod install --clean-install
+        env:
+          COCOAPODS_DISABLE_STATS: '1'
 
       - name: Build IPA
         run: flutter build ipa --no-codesign --release --verbose
