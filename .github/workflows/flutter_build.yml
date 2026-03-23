@@ -60,19 +60,20 @@ jobs:
           sudo gem install cocoapods -v 1.14.3
           pod --version
 
-      # CRITICAL: pub get MUST run before pod install
-      # It generates ios/Flutter/podhelper.rb and Generated.xcconfig
       - name: Get dependencies
         run: flutter pub get
 
-      # Verify generated files exist before pod install
+      # Force generate iOS Flutter files (podhelper.rb + Generated.xcconfig)
+      - name: Generate iOS Flutter files
+        run: |
+          flutter precache --ios
+          flutter build ios --config-only --no-codesign
+
       - name: Verify Flutter iOS files
         run: |
-          echo "Checking for podhelper.rb..."
-          ls ios/Flutter/podhelper.rb
-          echo "Checking for Generated.xcconfig..."
-          ls ios/Flutter/Generated.xcconfig
-          echo "FLUTTER_ROOT in Generated.xcconfig:"
+          echo "=== ios/Flutter directory ==="
+          ls -la ios/Flutter/
+          echo "=== FLUTTER_ROOT ==="
           grep FLUTTER_ROOT ios/Flutter/Generated.xcconfig
 
       - name: Install CocoaPods dependencies
