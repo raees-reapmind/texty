@@ -2,39 +2,24 @@ platform :ios, '15.0'
 
 ENV['COCOAPODS_DISABLE_STATS'] = '1'
 
-# Search for podhelper in local project first, then fallback to Flutter SDK
-podhelper_path = File.expand_path(File.join('Flutter', 'podhelper.rb'), __dir__)
-
-if File.exist?(podhelper_path)
-  require podhelper_path
-else
-  # Fallback to FLUTTER_ROOT env var which is available in GH Actions
-  flutter_root = ENV['FLUTTER_ROOT']
-  if flutter_root
-    require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
-  else
-    # Last resort: try to find it via Generated.xcconfig for local environments
-    generated_xcconfig = File.expand_path(File.join('Flutter', 'Generated.xcconfig'), __dir__)
-    if File.exist?(generated_xcconfig)
-      flutter_root = File.foreach(generated_xcconfig).grep(/FLUTTER_ROOT=/).first.split('=').last.strip rescue nil
-      if flutter_root
-        require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
-      end
-    end
+def flutter_root
+  generated_xcode_build_settings_path = File.join(File.dirname(__FILE__), 'Flutter', 'Generated.xcconfig')
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "Generated.xcconfig not found. Run 'flutter pub get' first."
   end
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT not found in Generated.xcconfig."
 end
 
-# Fail explicitly with a helpful message if podhelper still not loaded
-unless respond_to?(:flutter_ios_podfile_setup)
-  raise "podhelper not found. Please run 'flutter pub get' first or ensure FLUTTER_ROOT is set in your environment."
-end
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
 
 flutter_ios_podfile_setup
 
 target 'Runner' do
-  use_frameworks!
   use_modular_headers!
-
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 

@@ -29,9 +29,6 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Flutter Doctor
-        run: flutter doctor -v
-
       - name: Get dependencies
         run: flutter pub get
 
@@ -57,17 +54,26 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Flutter Doctor
-        run: flutter doctor -v
-
-      - name: Install CocoaPods 1.15.2
+      - name: Install CocoaPods 1.14.3
         run: |
           sudo gem uninstall cocoapods --all --ignore-dependencies || true
-          sudo gem install cocoapods -v 1.15.2
+          sudo gem install cocoapods -v 1.14.3
           pod --version
 
+      # CRITICAL: pub get MUST run before pod install
+      # It generates ios/Flutter/podhelper.rb and Generated.xcconfig
       - name: Get dependencies
         run: flutter pub get
+
+      # Verify generated files exist before pod install
+      - name: Verify Flutter iOS files
+        run: |
+          echo "Checking for podhelper.rb..."
+          ls ios/Flutter/podhelper.rb
+          echo "Checking for Generated.xcconfig..."
+          ls ios/Flutter/Generated.xcconfig
+          echo "FLUTTER_ROOT in Generated.xcconfig:"
+          grep FLUTTER_ROOT ios/Flutter/Generated.xcconfig
 
       - name: Install CocoaPods dependencies
         run: |
@@ -84,3 +90,14 @@ jobs:
         with:
           name: ios-release-archive
           path: build/ios/archive/Runner.xcarchive
+```
+
+---
+
+## The exact sequence that must happen
+```
+flutter pub get
+    └── generates → ios/Flutter/podhelper.rb       ← Podfile requires this
+    └── generates → ios/Flutter/Generated.xcconfig  ← contains FLUTTER_ROOT path
+          └── pod install reads FLUTTER_ROOT
+                └── flutter build ipa
