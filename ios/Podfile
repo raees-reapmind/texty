@@ -10,14 +10,22 @@ project 'Runner', {
   'Profile' => :profile,
 }
 
-def flutter_install_all_ios_pods(ios_application_path = nil)
-  native_additions_path = File.join(File.dirname(__FILE__), 'Flutter', 'podhelper.rb')
-  require native_additions_path
-  flutter_ios_podfile_setup
-  parse_plugins_from_pubspec(ios_application_path)
-  # Iterate over the plugins and install them as pods.
-  pod 'Flutter', :path => File.join(File.dirname(__FILE__), 'Flutter')
+def flutter_root
+  generated_xcode_build_settings_path = File.join(File.dirname(__FILE__), 'Flutter', 'Generated.xcconfig')
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+  end
+
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig and running flutter pub get again"
 end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+flutter_ios_podfile_setup
 
 target 'Runner' do
   use_frameworks!
