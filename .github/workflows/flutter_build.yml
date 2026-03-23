@@ -1,5 +1,4 @@
 name: Flutter Build
-
 on:
   push:
     branches:
@@ -14,7 +13,6 @@ jobs:
   android-build:
     name: Build Android APK
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -62,7 +60,6 @@ jobs:
       - name: Flutter Doctor
         run: flutter doctor -v
 
-      # Fix 1: Pin CocoaPods to a stable version (avoid 1.16.x bug)
       - name: Install CocoaPods 1.15.2
         run: |
           sudo gem uninstall cocoapods --all --ignore-dependencies || true
@@ -72,7 +69,6 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      # Fix 2: Use --clean-install instead of --repo-update
       - name: Install CocoaPods dependencies
         run: |
           cd ios
@@ -88,4 +84,3 @@ jobs:
         with:
           name: ios-release-archive
           path: build/ios/archive/Runner.xcarchive
-
